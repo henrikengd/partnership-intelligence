@@ -20,15 +20,17 @@ T-02 / #3 worker /root/foundation committed 770a97274e5e75dcc4973d6671d858336d11
 
 T-03 / #4 is running with /root/foundation in /Users/henrik.noteless/.codex/worktrees/pi-t03-onboarding/partnership-intelligence, branch codex/pi-t03-onboarding, assigned base 3913834. It owns schema/migrations, record forms/validation, onboarding/imports and manual partnership/previous outreach records. Runtime pi_t01 localhost 5541, app/E2E 3103.
 
-T-04 / #5 is running with /root/graph in /Users/henrik.noteless/.codex/worktrees/pi-t04-graph/partnership-intelligence, branch codex/pi-t04-graph, assigned base 3913834. It owns network traversal/service, focused graph/path panel, graph/company-detail pages and the generator path adapter. Runtime separate pi_t01 localhost 5544, app/E2E 3104. No schema changes planned. Both workers were assigned after integrated T-02 verification and continue independent work during its focused repair without changing the repaired service interfaces.
+T-04 / #5 is integrated and closed at 93770f9. Worker /root/graph completed 444e941540b2c261164d5b0c17ca6bef3b17ab05, integrated as 351bc3b. Coordinator wiring 93770f9 passed lint/types/build/unit10/PG27/Chromium3. Current record comparisons are labelled separately from immutable assessment routes. Completed activity history is derived; additional T-03 partnership/manual history mapping remains a coordinator integration task. Its former worker assignment was /root/graph in /Users/henrik.noteless/.codex/worktrees/pi-t04-graph/partnership-intelligence, branch codex/pi-t04-graph, assigned base 3913834. It owns network traversal/service, focused graph/path panel, graph/company-detail pages and the generator path adapter. Runtime separate pi_t01 localhost 5544, app/E2E 3104. No schema changes planned. Both workers were assigned after integrated T-02 verification and continue independent work during its focused repair without changing the repaired service interfaces.
 
 Early read-only reviews by /root/test_runtime: F-01/F-02 at 2f9e821 plus docs7379d5e found no material issue, and an unused organizationExists helper was corrected in T-02. T-02 at 3913834 found P2 stale snapshot relabelling and concurrent completed-action reversion. This is not the final full-feature review. No reviewer mutated files or databases.
 
 Runtime prerequisite resolved. Node v24.19.0 and npm 11.17.0 are available. Isolated Colima profile partnership-intelligence runs Docker, with DOCKER_CONFIG=/private/tmp/pi-docker-config and DOCKER_CONTEXT=colima-partnership-intelligence. PostgreSQL 18.6 test containers use localhost 5541 for pi_t01 and 5540 for pi_integration. A separate pi-t04-postgres container exposes localhost 5544, also with an isolated database named pi_t01 to satisfy the existing destructive-test guard. No current worker shares that container. The profile does not change the user's default Docker context. Operational commands are in the original workspace's ignored .local/runtime.md. Foundation Compose project pi-t01-smoke is stopped with its volume retained. T-02 reserves port 3102; the earlier foundation Compose server is stopped.
 
+T-05 / #6 is assigned to /root/graph in /Users/henrik.noteless/.codex/worktrees/pi-t05-generation/partnership-intelligence, branch codex/pi-t05-generation, verified prerequisite base 93770f9. Runtime isolated pi_t01 localhost5544, app/E2E3104. It owns candidate/run/review modules and opportunity/dashboard UI. T-03 retains migration0004 ownership; T-05 may add schema declarations but must wait for the coordinator to provide integrated T-03 migration metadata before generating its subsequent migration. It can implement its independent service/UI meanwhile.
+
 ## Next action
 
-Integrate and verify T-03/T-04 as each is ready. T-02 repairs are verified and independently reviewed at 85c5c24; #3 is closed again. Preserve #2 pending final CI and the parent as open until PR merge.
+Integrate and verify T-03 when ready; map its historical source records into the verified graph projection. T-05 is eligible from integrated verified T-04 and running in isolation. T-02 repairs are verified and independently reviewed at 85c5c24; #3 is closed again. Preserve #2 pending final CI and the parent as open until PR merge.
 
 ## Infrastructure and tracker reconciliation
 
@@ -40,8 +42,10 @@ T-02 worker reports stable record/network/assessment/activity seams under src/mo
 
 ## Worktree cleanup
 
-The clean T-01 worker checkout was archived through the managed worktree tool after its commit was integrated. The attachment now reports archived_worktree at the original identity. Its Git snapshot is recoverable; worker verification notes are on the integration branch and fictional screenshots/logs remain under /private/tmp. No needed ignored files were present in that checkout. T-02 remains active in its separate worktree.
+The clean T-01 worker checkout was archived through the managed worktree tool after its commit was integrated. The attachment now reports archived_worktree at the original identity. Its Git snapshot is recoverable; worker verification notes are on the integration branch and fictional screenshots/logs remain under /private/tmp. No needed ignored files were present in that checkout. The clean T-02 checkout was also archived after its code/evidence was integrated; it is no longer needed.
 
 ## Verified integration checkpoint
 
 Current verified application commit 85c5c24f7270fae1caf43f1d2fda039b3dfd545d. Check commands used isolated pi_integration localhost5540 and E2E3100. Lint/types/build/unit10/PG19/Chromium2 pass, with regression detection demonstrated against 3913834. Early repair reviewer /root/test_runtime was read-only and did not implement the feature. Full-feature review and remote current-commit CI remain pending.
+
+Graph verified checkpoint: 93770f9 contains the independently checked graph and UI wiring; no current-SHA remote CI or final full-feature review yet. All three Chromium workflows passed after worker-scoped pool cleanup. Generated next-env.d.ts development references are uncommitted and excluded from feature changes.
