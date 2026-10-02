@@ -30,7 +30,7 @@ T-05 / #6 is integrated, independently checked and closed at ca411ec3bce2d765c3f
 
 T-06 / #7 is assigned to /root/foundation in /Users/henrik.noteless/.codex/worktrees/pi-t06-outreach/partnership-intelligence, branch codex/pi-t06-outreach, from c2bf7d2. It owns lifecycle/activity/outcomes and pipeline, with migration0006 committed early for metadata handoff. Isolated database pi_t01 on5541 and app/E2E3103.
 
-T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.codex/worktrees/pi-t07-ai/partnership-intelligence, branch codex/pi-t07-ai, from c2bf7d2. It starts independent AI context/provider/UI modules and waits for root to release T-06's committed schema metadata before touching schema or generating migration0007. Isolated database pi_t01 on5544 and app/E2E3104. AI drafts remain separate from assessments, scores, manual briefs and activities. Root owns shared detail/settings mounts and startup composition.
+T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.codex/worktrees/pi-t07-ai/partnership-intelligence, branch codex/pi-t07-ai, from c2bf7d2. Its independent AI modules are in progress. The T-06 schema metadata has now been adopted as e3216aeada8b62cbd546df281fa860d48f47bdfa, and T-07 owns migration0007. Isolated database pi_t01 on5544 and app/E2E3104. AI drafts remain separate from assessments, scores, manual briefs and activities. Root owns shared detail/settings mounts and startup composition.
 
 ## Next action
 
@@ -69,3 +69,7 @@ Read-only preparation for T-06 and T-07 established separate lifecycle/activity 
 ## T-05 integrated checkpoint
 
 Worker b9cf10051d2bb6f0a06d6772c90f656aa00b9891 integrated cleanly as ca411ec3bce2d765c3fda102f93c81f1d144c411. Coordinator lint/types/build/unit13/PG50/Chromium8 pass. Existing root onboarding/dashboard/Docker public copy, T-03 history mapping and import repairs survive. Fictional selected-route screenshot inspected. Worker also verified actual prestart interruption recovery and explicit retry, documented in notes/t-05-verification.md. Bounded independent reviewer /root/test_runtime confirms all three P2 repairs and one-retry gate at exact ca411ec, with no new material finding. #6 can close; T-06 and T-07 are now eligible. Final full-feature review, Compose/restore verification and remote current-SHA CI remain pending.
+
+## T-06 schema handoff
+
+Schema-only worker7a7a25693ecb2b1db836c448005e7b429cc4787f integrated as8d73b10. Root inspected SQL/schema, applied migration0006 to isolated pi_integration and passed typecheck. This releases metadata to T-07, which adopted it as e3216aeada8b62cbd546df281fa860d48f47bdfa. T-06 continues services/UI/tests without further schema edits; both tickets remain open pending complete integrated verification. Root mounts LifecycleControls, AiDraftPanel(opportunityId) and AiSettings, and extends startup recovery with recoverInterruptedAiRuns. T-07 private referenceMap will support later person/source snapshot purge.
