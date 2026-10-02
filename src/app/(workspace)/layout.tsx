@@ -28,6 +28,10 @@ export default async function WorkspaceLayout({
         </Link>
         <nav aria-label="Main navigation">
           <Link href="/dashboard">Overview</Link>
+          <Link href="/needs">Needs</Link>
+          <Link href="/network">Network</Link>
+          <Link href="/companies">Companies</Link>
+          <Link href="/opportunities">Opportunities</Link>
           <Link href="/settings">Settings</Link>
         </nav>
         <span className="muted small">{actor.name}</span>

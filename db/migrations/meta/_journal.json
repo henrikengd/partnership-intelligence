@@ -15,6 +15,20 @@
       "when": 1790976360606,
       "tag": "0001_high_jack_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790977974010,
+      "tag": "0002_nosy_stingray",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790978439925,
+      "tag": "0003_grey_gateway",
+      "breakpoints": true
     }
   ]
 }

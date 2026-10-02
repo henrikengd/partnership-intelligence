@@ -49,11 +49,10 @@ export async function installationConfigured() {
   return Boolean(await db.query.user.findFirst({ columns: { id: true } }));
 }
 export async function organizationExists() {
-  return Boolean(
-    await db
-      .select({ id: organization.id })
-      .from(organization)
-      .where(eq(organization.singletonKey, 1))
-      .limit(1),
-  );
+  const rows = await db
+    .select({ id: organization.id })
+    .from(organization)
+    .where(eq(organization.singletonKey, 1))
+    .limit(1);
+  return rows.length > 0;
 }

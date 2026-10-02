@@ -19,6 +19,7 @@
     "auth:recover": "tsx scripts/recover-admin.ts"
   },
   "dependencies": {
+    "@xyflow/react": "12.10.1",
     "better-auth": "1.7.7",
     "dotenv": "18.0.5",
     "drizzle-orm": "0.45.3",
