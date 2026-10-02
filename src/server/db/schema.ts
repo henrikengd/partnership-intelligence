@@ -352,6 +352,9 @@ export const opportunity = pgTable(
       (): AnyPgColumn => opportunity.id,
     ),
     ownerId: uuid("owner_id").references(() => user.id),
+    partnershipId: uuid("partnership_id").references(
+      (): AnyPgColumn => partnership.id,
+    ),
     manualBrief: jsonb("manual_brief")
       .$type<Partial<BriefFields>>()
       .notNull()
@@ -442,6 +445,11 @@ export const activity = pgTable(
     description: text("description").notNull(),
     followUpDate: date("follow_up_date"),
     completedAt: timestamp("completed_at", { withTimezone: true }),
+    occurredDate: date("occurred_date"),
+    followUpResolvedAt: timestamp("follow_up_resolved_at", {
+      withTimezone: true,
+    }),
+    followUpResolvedBy: uuid("follow_up_resolved_by").references(() => user.id),
   },
   (t) => [
     check(
@@ -674,6 +682,59 @@ export const opportunityReview = pgTable(
     check(
       "opportunity_review_approach",
       sql`${t.approachMode} IN ('cold','introduction')`,
+    ),
+  ],
+);
+
+export const opportunityEvent = pgTable(
+  "opportunity_event",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => opportunity.id, { onDelete: "cascade" }),
+    action: text("action").notNull(),
+    fromState: text("from_state").notNull(),
+    toState: text("to_state").notNull(),
+    reason: text("reason").notNull().default(""),
+    source: text("source").notNull().default(""),
+    occurredDate: date("occurred_date").notNull(),
+    partnershipId: uuid("partnership_id").references(() => partnership.id),
+    reviewId: uuid("review_id").references(() => opportunityReview.id),
+    recordedBy: uuid("recorded_by")
+      .notNull()
+      .references(() => user.id),
+    requestId: uuid("request_id").notNull(),
+    requestHash: text("request_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("opportunity_event_request").on(t.organizationId, t.requestId),
+    index("opportunity_event_history").on(
+      t.organizationId,
+      t.opportunityId,
+      t.createdAt,
+    ),
+    check(
+      "opportunity_event_action",
+      sql`${t.action} IN ('transition','reopen','agreement')`,
+    ),
+    check(
+      "opportunity_event_states",
+      sql`${t.fromState} IN ('suggested','shortlisted','pursuing','agreed','declined','archived') AND ${t.toState} IN ('suggested','shortlisted','pursuing','agreed','declined','archived')`,
+    ),
+    check(
+      "opportunity_event_closed_reason",
+      sql`${t.toState} NOT IN ('declined','archived') OR length(trim(${t.reason})) > 0`,
+    ),
+    check(
+      "opportunity_event_agreement",
+      sql`${t.action} <> 'agreement' OR (${t.toState}='agreed' AND ${t.partnershipId} IS NOT NULL AND length(trim(${t.source})) > 0)`,
     ),
   ],
 );

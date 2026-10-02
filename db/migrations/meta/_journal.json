@@ -43,6 +43,13 @@
       "when": 1790981474394,
       "tag": "0005_nervous_vanisher",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790983682061,
+      "tag": "0006_foamy_veda",
+      "breakpoints": true
     }
   ]
 }
