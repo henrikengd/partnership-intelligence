@@ -1,4 +1,4 @@
-import type { RelationshipPath } from "../opportunities/contracts";
+import type { RelationshipPath, PathEdge } from "../opportunities/contracts";
 import type {
   organization,
   person,
@@ -8,6 +8,18 @@ import type {
   evidence,
 } from "../../server/db/schema";
 type Row<T extends { $inferSelect: unknown }> = T["$inferSelect"];
+export type PathHistory = {
+  id: string;
+  companyId: string;
+  kind: "partnership" | "outreach";
+  label: string;
+  occurredDate: string | null;
+  state: string;
+  description: string;
+  source?: string;
+  recordedBy?: string;
+  evidenceIds?: string[];
+};
 export type PathInput = {
   organization: Row<typeof organization>;
   company: Row<typeof company>;
@@ -17,6 +29,14 @@ export type PathInput = {
   evidence: Row<typeof evidence>[];
   today?: string;
 };
+export type NetworkPath = Omit<RelationshipPath, "edges"> & {
+  edges: (PathEdge & { state: string; recordedBy: string })[];
+  weakestPersonalStrength: number | null;
+  personalEdgeCount: number;
+  reviewedConnectionCount: number;
+  supportedConnectionCount: number;
+};
+export type PathResults = { current: NetworkPath[]; historical: NetworkPath[] };
 export function isCurrent(
   record: { state: string; startDate: string | null; endDate: string | null },
   today: string,
@@ -27,84 +47,192 @@ export function isCurrent(
     (!record.endDate || record.endDate >= today)
   );
 }
-// T02 deliberately returns one directly recorded organization/person/company path.
-// T04 extends traversal and ranking through the same typed result.
-export function findDirectPaths(input: PathInput): {
-  current: RelationshipPath[];
-  historical: RelationshipPath[];
-} {
+const internalRoles = new Set(["member", "alumni", "advisor", "board"]);
+const professionalKinds = new Set([
+  "works_at",
+  "previously_worked_at",
+  "interned_at",
+]);
+function comparePaths(a: NetworkPath, b: NetworkPath) {
+  // No title establishes relevance/authority. Every terminal is explicitly connected to this company.
+  // Refused routes remain visible but never displace a permitted current alternative.
+  return (
+    Number(b.current) - Number(a.current) ||
+    Number(a.willingness === "no") - Number(b.willingness === "no") ||
+    b.supportedConnectionCount - a.supportedConnectionCount ||
+    b.reviewedConnectionCount - a.reviewedConnectionCount ||
+    (b.weakestPersonalStrength ?? -1) - (a.weakestPersonalStrength ?? -1) ||
+    Number(b.willingness === "yes") - Number(a.willingness === "yes") ||
+    a.nodes.length - b.nodes.length ||
+    a.id.localeCompare(b.id)
+  );
+}
+/** Directed, explicit personal records only. At most two people between organization and company. */
+export function findRelationshipPaths(input: PathInput): PathResults {
   const today = input.today ?? new Date().toISOString().slice(0, 10);
-  const results: RelationshipPath[] = [];
-  for (const edge of input.relationships) {
-    if (edge.companyId !== input.company.id) continue;
-    const p = input.people.find((p) => p.id === edge.personId);
-    const affiliations = input.affiliations.filter(
-      (a) =>
-        a.personId === edge.personId &&
-        ["member", "alumni", "advisor", "board"].includes(a.role),
-    );
-    if (!p || !affiliations.length) continue;
-    const affiliation =
-      affiliations.find((a) => isCurrent(a, today)) ?? affiliations[0];
-    const source = input.evidence.find((e) => e.id === edge.evidenceId);
-    const supported = Boolean(
-      source && ["supplied", "reviewed"].includes(source.reviewState),
-    );
-    const current =
-      supported &&
-      isCurrent(edge, today) &&
-      isCurrent(affiliation, today) &&
-      edge.kind !== "previously_worked_at";
-    results.push({
-      id: `${affiliation.id}:${edge.id}`,
-      current,
-      nodes: [
-        {
-          id: input.organization.id,
-          kind: "organization",
-          label: input.organization.name,
-        },
-        { id: p.id, kind: "person", label: p.name },
-        { id: input.company.id, kind: "company", label: input.company.name },
-      ],
-      edges: [
-        {
-          id: affiliation.id,
-          label: affiliations.map((a) => a.role).join(", "),
-          startDate: affiliation.startDate,
-          endDate: affiliation.endDate,
-          evidenceIds: [],
-          strength: null,
-          willingness: "unknown",
-        },
-        {
-          id: edge.id,
-          label:
-            edge.kind.replaceAll("_", " ") +
-            (edge.title ? ` · ${edge.title}` : ""),
-          startDate: edge.startDate,
-          endDate: edge.endDate,
-          evidenceIds: [edge.evidenceId],
-          strength: edge.strength,
-          willingness: edge.willingness as "yes" | "no" | "unknown",
-          willingnessDate: edge.willingnessDate,
-          willingnessSource: edge.willingnessSource,
-          evidenceReviewState: source?.reviewState ?? "missing",
-        },
-      ],
-      willingness: edge.willingness as "yes" | "no" | "unknown",
-      warning: current
-        ? edge.willingness === "no"
-          ? "This person has recorded that they do not want to provide an introduction. Respect that refusal and find another permitted route."
-          : edge.willingness === "yes"
-            ? "Willingness was recorded on the displayed date. Reconfirm its applicability to this specific introduction; employment does not establish decision authority."
-            : "Employment establishes a recorded connection. Confirm whether this person is willing and able to introduce you."
-        : "Historical, unknown, future, or unsupported connection. Verify current access and resolve source concerns before approaching through this person.",
-    });
+  const people = new Map(input.people.map((p) => [p.id, p]));
+  const sources = new Map(input.evidence.map((e) => [e.id, e]));
+  const personal = new Map<string, Row<typeof relationship>[]>();
+  const employers = new Map<string, Row<typeof relationship>[]>();
+  for (const r of input.relationships) {
+    if (r.organizationId !== input.organization.id) continue;
+    if (
+      professionalKinds.has(r.kind) &&
+      r.companyId === input.company.id &&
+      !r.targetPersonId
+    ) {
+      employers.set(r.personId, [...(employers.get(r.personId) ?? []), r]);
+    } else if (
+      ["knows", "introduced_by", "studied_with"].includes(r.kind) &&
+      r.targetPersonId &&
+      !r.companyId &&
+      r.personId !== r.targetPersonId
+    ) {
+      personal.set(r.personId, [...(personal.get(r.personId) ?? []), r]);
+    }
   }
-  results.sort((a, b) => a.id.localeCompare(b.id));
+  const all: NetworkPath[] = [];
+  // Multiple internal roles describe one root; prefer a current affiliation, then stable ID.
+  const roots = new Map<string, Row<typeof affiliation>[]>();
+  for (const a of input.affiliations) {
+    if (a.organizationId === input.organization.id && internalRoles.has(a.role))
+      roots.set(a.personId, [...(roots.get(a.personId) ?? []), a]);
+  }
+  for (const [rootId, roles] of roots) {
+    const root = people.get(rootId);
+    if (!root || root.organizationId !== input.organization.id) continue;
+    roles.sort(
+      (a, b) =>
+        Number(isCurrent(b, today)) - Number(isCurrent(a, today)) ||
+        a.id.localeCompare(b.id),
+    );
+    const membership = roles[0];
+    function visit(
+      personId: string,
+      personIds: string[],
+      connections: Row<typeof relationship>[],
+    ) {
+      for (const employment of employers.get(personId) ?? []) {
+        const chain = [...connections, employment];
+        const edgeSources = chain.map((e) => sources.get(e.evidenceId));
+        const support = edgeSources.map((s) =>
+          Boolean(
+            s &&
+            s.organizationId === input.organization.id &&
+            s.observedDate <= today &&
+            ["supplied", "reviewed"].includes(s.reviewState),
+          ),
+        );
+        const current =
+          isCurrent(membership, today) &&
+          chain.every(
+            (e, i) =>
+              isCurrent(e, today) &&
+              e.kind !== "previously_worked_at" &&
+              support[i],
+          );
+        const willingness = chain.some((e) => e.willingness === "no")
+          ? "no"
+          : chain.every(
+                (e) =>
+                  e.willingness === "yes" &&
+                  e.willingnessDate &&
+                  e.willingnessDate <= today &&
+                  e.willingnessSource,
+              )
+            ? "yes"
+            : "unknown";
+        // Professional affiliation strength is not personal familiarity. Never add ordinal strengths.
+        const weakestPersonalStrength =
+          connections.length && connections.every((e) => e.strength !== null)
+            ? Math.min(...connections.map((e) => e.strength!))
+            : null;
+        const edges: NetworkPath["edges"] = [
+          {
+            id: membership.id,
+            label: membership.role,
+            state: membership.state,
+            recordedBy: membership.recordedBy,
+            startDate: membership.startDate,
+            endDate: membership.endDate,
+            evidenceIds: [],
+            strength: null,
+            willingness: "unknown",
+          },
+          ...chain.map((e, i) => ({
+            id: e.id,
+            label:
+              e.kind.replaceAll("_", " ") + (e.title ? ` · ${e.title}` : ""),
+            state: e.state,
+            recordedBy: e.recordedBy,
+            startDate: e.startDate,
+            endDate: e.endDate,
+            evidenceIds: [e.evidenceId],
+            strength: e.strength,
+            willingness: e.willingness as "yes" | "no" | "unknown",
+            willingnessDate: e.willingnessDate,
+            willingnessSource: e.willingnessSource,
+            evidenceReviewState: edgeSources[i]?.reviewState ?? "missing",
+          })),
+        ];
+        all.push({
+          id: [membership.id, ...chain.map((e) => e.id)].join(":"),
+          current,
+          nodes: [
+            {
+              id: input.organization.id,
+              kind: "organization",
+              label: input.organization.name,
+            },
+            ...personIds.map((id) => ({
+              id,
+              kind: "person" as const,
+              label: people.get(id)!.name,
+            })),
+            {
+              id: input.company.id,
+              kind: "company",
+              label: input.company.name,
+            },
+          ],
+          edges,
+          willingness,
+          weakestPersonalStrength,
+          personalEdgeCount: connections.length,
+          supportedConnectionCount:
+            support.filter(Boolean).length / chain.length,
+          reviewedConnectionCount:
+            edgeSources.filter((s) => s?.reviewState === "reviewed").length /
+            chain.length,
+          warning:
+            willingness === "no"
+              ? "Respect the recorded refusal. This connection is unavailable for an introduction; choose another permitted route."
+              : !current
+                ? "Historical, unknown, future, or unsupported connection. Verify current access and resolve source concerns before using this lead."
+                : willingness === "yes"
+                  ? "Willingness has a recorded date and source. Reconfirm it for this specific introduction; it does not establish present consent or decision authority."
+                  : "This is a recorded company connection. Introduction willingness, suitability, and decision authority need confirmation.",
+        });
+      }
+      if (personIds.length >= 2) return;
+      for (const connection of personal.get(personId) ?? []) {
+        const next = connection.targetPersonId!;
+        if (
+          personIds.includes(next) ||
+          !people.has(next) ||
+          people.get(next)!.organizationId !== input.organization.id
+        )
+          continue;
+        visit(next, [...personIds, next], [...connections, connection]);
+      }
+    }
+    visit(rootId, [rootId], []);
+  }
+  all.sort(comparePaths);
   return {
-    current: results.filter((p) => p.current).slice(0, 1),
-    historical: results.filter((p) => !p.current).slice(0, 1),
+    current: all.filter((p) => p.current).slice(0, 3),
+    historical: all.filter((p) => !p.current).slice(0, 3),
   };
 }
+/** Backward-compatible entry point. Now includes bounded explicit personal intermediaries. */
+export const findDirectPaths = findRelationshipPaths;

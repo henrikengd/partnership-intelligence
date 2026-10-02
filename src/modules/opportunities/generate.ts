@@ -36,6 +36,18 @@ export function buildDeterministicAssessment(
     evidence: data.evidence,
   });
   const path = paths.current[0] ?? null;
+  const today = new Date().toISOString().slice(0, 10);
+  const historicalLead = paths.historical.find(
+    (p) =>
+      p.willingness !== "no" &&
+      p.supportedConnectionCount === 1 &&
+      p.edges.some((e) => e.state === "ended") &&
+      p.edges.every(
+        (e) =>
+          ["current", "ended"].includes(e.state) &&
+          (!e.startDate || e.startDate <= today),
+      ),
+  );
   const factors: Factors = unknownFactors();
   const valid = supported.filter((c) =>
     ["supplied", "reviewed"].includes(c.evidence.reviewState),
@@ -44,6 +56,7 @@ export function buildDeterministicAssessment(
     ...new Set([
       ...supported.map((c) => c.evidence.id),
       ...(path?.edges.flatMap((e) => e.evidenceIds) ?? []),
+      ...(historicalLead?.edges.flatMap((e) => e.evidenceIds) ?? []),
     ]),
   ];
   if (valid.length)
@@ -58,12 +71,30 @@ export function buildDeterministicAssessment(
     };
   if (path && path.willingness !== "no")
     factors.relationship = {
-      value: 2,
+      value:
+        path.weakestPersonalStrength !== null &&
+        path.weakestPersonalStrength <= 1
+          ? 1
+          : 2,
       rationale:
-        "A current recorded organization connection works at this company. Introduction ability and willingness are unconfirmed.",
+        path.weakestPersonalStrength !== null &&
+        path.weakestPersonalStrength <= 1
+          ? "A recorded personal connection in this route is weak. Verify its suitability before seeking an introduction."
+          : "A current recorded route reaches this company. Introduction suitability and decision authority still require review.",
       origin: "deterministic",
       evidenceIds: path.edges.flatMap((e) => e.evidenceIds),
-      source: "Recorded affiliation and current employment.",
+      source:
+        "Recorded internal affiliation, explicit personal edges where present, and current employment. Titles do not establish need relevance; the deterministic relationship value is capped at 2.",
+    };
+  else if (historicalLead)
+    factors.relationship = {
+      value: 1,
+      rationale:
+        "Only a supported ended connection is recorded. This is a historical lead to verify, not current introduction access.",
+      origin: "deterministic",
+      evidenceIds: historicalLead.edges.flatMap((e) => e.evidenceIds),
+      source:
+        "Explicit ended affiliation/employment or personal connection with supplied/reviewed evidence. Unknown, future and disputed records do not qualify.",
     };
   if (supported.some((c) => c.evidence.reviewState === "disputed"))
     factors.evidence = {
