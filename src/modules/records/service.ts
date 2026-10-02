@@ -10,6 +10,7 @@ import {
   capability,
   relationship,
   opportunity,
+  opportunityEvent,
   user,
   partnership,
   previousOutreach,
@@ -354,16 +355,30 @@ export async function saveRecordInTransaction(
       await assertReference(tx, org.id, "companies", input.companyId);
       if (input.evidenceId)
         await assertReference(tx, org.id, "evidence", input.evidenceId);
-      if (
-        id &&
-        !(await tx.query.partnership.findFirst({
+      if (id) {
+        const existing = await tx.query.partnership.findFirst({
           where: and(
             eq(partnership.id, id),
             eq(partnership.organizationId, org.id),
           ),
-        }))
-      )
-        throw new DomainError("NOT_FOUND", "Partnership not found.", 404);
+        });
+        if (!existing)
+          throw new DomainError("NOT_FOUND", "Partnership not found.", 404);
+        if (existing.companyId !== input.companyId) {
+          const linkedOpportunity = await tx.query.opportunity.findFirst({
+            where: eq(opportunity.partnershipId, id),
+          });
+          const linkedEvent = await tx.query.opportunityEvent.findFirst({
+            where: eq(opportunityEvent.partnershipId, id),
+          });
+          if (linkedOpportunity || linkedEvent)
+            throw new DomainError(
+              "LINKED_PARTNERSHIP_COMPANY",
+              "A partnership referenced by a recorded opportunity outcome cannot move to another company.",
+              409,
+            );
+        }
+      }
       const [record] = id
         ? await tx
             .update(partnership)

@@ -1,4 +1,8 @@
-import { startPursuing } from "@/modules/opportunities/review";
+import { randomUUID } from "node:crypto";
+import {
+  getLifecycleDetail,
+  transitionOpportunity,
+} from "@/modules/outreach/lifecycle";
 import { checkOrigin, jsonRoute } from "@/server/http";
 export async function POST(
   r: Request,
@@ -6,6 +10,15 @@ export async function POST(
 ) {
   return jsonRoute(async () => {
     checkOrigin(r);
-    return startPursuing(r.headers, (await params).id);
+    const id = (await params).id;
+    const detail = await getLifecycleDetail(r.headers, id);
+    return (
+      await transitionOpportunity(r.headers, id, {
+        requestId: randomUUID(),
+        action: "transition",
+        fromState: detail.record.state,
+        toState: "pursuing",
+      })
+    ).record;
   });
 }

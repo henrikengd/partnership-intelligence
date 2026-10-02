@@ -380,7 +380,8 @@ describe("saved deterministic workflow against PostgreSQL", () => {
         ...event,
         status: "completed",
       });
-      // Pause the first writer while it holds the row, before launching the edit.
+      // Pause completion while it holds organization/opportunity/activity locks.
+      // The competing edit must wait at the first lock in that order.
       await waitForLock(`SELECT EXISTS(SELECT 1 FROM pg_locks
         WHERE NOT granted AND locktype='advisory' AND objid=70411002) AS ready`);
       const plannedEdit = saveActivity(f.headers, {
@@ -391,7 +392,8 @@ describe("saved deterministic workflow against PostgreSQL", () => {
       results = Promise.allSettled([completion, plannedEdit]);
       await waitForLock(`SELECT EXISTS(SELECT 1 FROM pg_stat_activity
         WHERE datname=current_database() AND wait_event_type='Lock'
-        AND wait_event<>'advisory' AND query LIKE '%"activity"%') AS ready`);
+        AND wait_event<>'advisory'
+        AND (query LIKE '%"activity"%' OR query LIKE '%"organization"%')) AS ready`);
       await barrier.query("SELECT pg_advisory_unlock(70411002)");
       const [completed, edited] = await results;
       expect(completed.status).toBe("fulfilled");

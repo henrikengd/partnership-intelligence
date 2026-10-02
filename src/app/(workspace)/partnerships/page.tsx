@@ -23,6 +23,37 @@ export default async function Page() {
         Record what happened with dates and attribution. History provides
         context without proving personal access or decision authority.
       </p>
+      <section className="card">
+        <h2>Current and past contributions</h2>
+        {data.partnerships.length ? (
+          data.partnerships.map((p) => (
+            <article className="account" key={p.id}>
+              <strong>
+                {p.title} · {p.state}
+              </strong>
+              <p>{p.description || "Contribution details not recorded"}</p>
+              <p>
+                {p.startDate ?? "Start unknown"} →{" "}
+                {p.endDate ?? "End not recorded"}
+              </p>
+              <Link href={`/companies/${p.companyId}/history`}>
+                Company outcome history
+              </Link>
+              {data.opportunities
+                .filter((o) => o.partnershipId === p.id)
+                .map((o) => (
+                  <p key={o.id}>
+                    <Link href={`/pipeline/${o.id}`}>
+                      Original opportunity and actions
+                    </Link>
+                  </p>
+                ))}
+            </article>
+          ))
+        ) : (
+          <p>No partnerships recorded.</p>
+        )}
+      </section>
       <div className="grid">
         <RecordEditor kind="partnerships" title="Partnership" data={data} />
         <RecordEditor

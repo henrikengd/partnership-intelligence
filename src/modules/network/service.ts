@@ -113,7 +113,7 @@ export async function getNetworkGraph(
               companyId: opportunity.companyId,
               kind: "outreach" as const,
               label: a.kind.replaceAll("_", " "),
-              occurredDate: a.completedAt?.toISOString().slice(0, 10) ?? null,
+              occurredDate: a.occurredDate,
               state: "completed",
               description: a.description,
               recordedBy: a.recordedBy,
