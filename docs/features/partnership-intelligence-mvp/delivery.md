@@ -26,11 +26,15 @@ Early read-only reviews by /root/test_runtime: F-01/F-02 at 2f9e821 plus docs737
 
 Runtime prerequisite resolved. Node v24.19.0 and npm 11.17.0 are available. Isolated Colima profile partnership-intelligence runs Docker, with DOCKER_CONFIG=/private/tmp/pi-docker-config and DOCKER_CONTEXT=colima-partnership-intelligence. PostgreSQL 18.6 test containers use localhost 5541 for pi_t01 and 5540 for pi_integration. A separate pi-t04-postgres container exposes localhost 5544, also with an isolated database named pi_t01 to satisfy the existing destructive-test guard. T-05 exclusively uses that container until its verification and server shutdown. The profile does not change the user's default Docker context. Operational commands are in the original workspace's ignored .local/runtime.md. Foundation Compose project pi-t01-smoke is stopped with its volume retained. T-02 reserves port 3102; the earlier foundation Compose server is stopped.
 
-T-05 / #6 is assigned to /root/graph in /Users/henrik.noteless/.codex/worktrees/pi-t05-generation/partnership-intelligence, branch codex/pi-t05-generation, verified prerequisite base 93770f9. Runtime isolated pi_t01 localhost5544, app/E2E3104. It owns candidate/run/review modules and opportunity/dashboard UI. T-03 migration0004 metadata is integrated and verified; T-05 has been instructed to adopt 07c66cc before generating migration0005. Only its own T-05 commits should return for integration.
+T-05 / #6 is integrated, independently checked and closed at ca411ec3bce2d765c3fda102f93c81f1d144c411. Its worker b9cf10051d2bb6f0a06d6772c90f656aa00b9891 adds migration0005 after verified0004. The worker server is stopped and its database5544 is released to T-07.
+
+T-06 / #7 is assigned to /root/foundation in /Users/henrik.noteless/.codex/worktrees/pi-t06-outreach/partnership-intelligence, branch codex/pi-t06-outreach, from c2bf7d2. It owns lifecycle/activity/outcomes and pipeline, with migration0006 committed early for metadata handoff. Isolated database pi_t01 on5541 and app/E2E3103.
+
+T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.codex/worktrees/pi-t07-ai/partnership-intelligence, branch codex/pi-t07-ai, from c2bf7d2. It starts independent AI context/provider/UI modules and waits for root to release T-06's committed schema metadata before touching schema or generating migration0007. Isolated database pi_t01 on5544 and app/E2E3104. AI drafts remain separate from assessments, scores, manual briefs and activities. Root owns shared detail/settings mounts and startup composition.
 
 ## Next action
 
-Integrate and verify T-05 when ready. T-03 is closed after combined verification, and its history mapping is checked. T-05 is running in isolation with released T-03 metadata. T-06/T-07 remain blocked until T-05 integration verification. T-02 repairs are verified and independently reviewed at 85c5c24; #3 is closed again. Preserve #2 pending final CI and the parent as open until PR merge.
+Integrate T-06's early schema contract serially, release its metadata to T-07, then integrate and verify completed T-06/T-07 code in order. Only root updates the integration branch and tracker. T-08/T-09 remain blocked until both tickets are integrated and verified. Preserve #2 pending final CI and the parent as open until PR merge.
 
 ## Infrastructure and tracker reconciliation
 
