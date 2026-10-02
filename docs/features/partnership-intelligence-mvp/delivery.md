@@ -14,10 +14,16 @@ The original planning workspace remains untouched and its local main is unborn. 
 
 ## Current assignment and blockers
 
-T-01 / #2 is the only dependency-eligible ticket. Its worker uses codex/pi-t01-foundation in /Users/henrik.noteless/.codex/worktrees/pi-t01-foundation/partnership-intelligence from the captured base. Worker agent: /root/foundation. Runtime agent: /root/test_runtime. Verification is pending. Other tickets remain blocked by integrated prerequisites.
+T-01 / #2 has been integrated as `2f9e821` from worker commit `f1a6e21a1b5d124b2e4fbd79e3c5137cb1260766`. The coordinator independently passed `npm ci`, lint, typecheck, production build, four unit tests, nine PostgreSQL integration tests, migrations and the complete Chromium access workflow on this commit. Worker evidence additionally establishes actual Compose build/bootstrap/restart persistence and operator recovery, documented in notes/t-01-verification.md. GitHub CI remains pending the final feature PR, so #2 remains open for that acceptance criterion. Its integrated functional prerequisites are verified and T-02 is eligible; tracker comments must distinguish this from full closure.
 
-Docker is absent. Node v24.19.0 and npm 11.17.0 are available. A project test container runtime must be provisioned before Compose and real PostgreSQL acceptance can pass. No Docker, browser, application build, CI or implementation review has passed yet.
+T-02 / #3 is the next assignment. Other tickets remain blocked by integrated prerequisites. Foundation interfaces are recorded in docs/development-contracts.md.
+
+Runtime prerequisite resolved. Node v24.19.0 and npm 11.17.0 are available. Isolated Colima profile partnership-intelligence runs Docker, with DOCKER_CONFIG=/private/tmp/pi-docker-config and DOCKER_CONTEXT=colima-partnership-intelligence. PostgreSQL 18.6 test containers use localhost 5541 for pi_t01 and 5540 for pi_integration. The profile does not change the user's default Docker context. Operational commands are in the original workspace's ignored .local/runtime.md. Foundation Compose project pi-t01-smoke is stopped with its volume retained. No development server currently reserves port 3102.
 
 ## Next action
 
-Implement T-01, provision isolated test resources, inspect and integrate its commits, verify on the integration branch, then close #2 with evidence. Preserve the parent as open until PR merge.
+Assign T-02 from integrated verified commit 2f9e821, implement and integrate its deterministic workflow, then verify its acceptance criteria. Preserve #2 pending final CI and the parent as open until PR merge.
+
+## Infrastructure and tracker reconciliation
+
+GitHub Actions is enabled, token permissions include workflow, and live main has no branch protection or repository rulesets. No pre-existing PR was found. These are prerequisites, not successful CI/review evidence. Runtime setup and connectivity are verified; T-01 integration checks passed as recorded above; no remote CI or independent full-feature review has yet run.
