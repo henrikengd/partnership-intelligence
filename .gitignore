@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+coverage/
+test-results/
+playwright-report/
+.private/
+.local/
+uploads/
+exports/
+backups/
+*.log
+.DS_Store

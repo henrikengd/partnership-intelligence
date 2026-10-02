@@ -1,0 +1,232 @@
+{
+  "repository": "henrikengd/partnership-intelligence",
+  "revision": "r1",
+  "parent": {
+    "number": 1,
+    "id": 5683465024,
+    "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/1",
+    "title": "feat: Partnership Intelligence MVP specification"
+  },
+  "tickets": {
+    "T-01": {
+      "number": 2,
+      "id": 5683465135,
+      "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/2",
+      "title": "T-01: Establish the self-hosted app and invited private access",
+      "requirements": [
+        "F-01",
+        "F-02"
+      ],
+      "blocked_by": [],
+      "file": "docs/features/partnership-intelligence-mvp/issues/t-01-self-hosted-private-foundation.md"
+    },
+    "T-02": {
+      "number": 3,
+      "id": 5683465240,
+      "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/3",
+      "title": "T-02: Deliver the first complete deterministic partnership workflow",
+      "requirements": [
+        "F-03",
+        "F-04",
+        "F-08",
+        "F-10",
+        "F-11"
+      ],
+      "blocked_by": [
+        "T-01"
+      ],
+      "file": "docs/features/partnership-intelligence-mvp/issues/t-02-first-deterministic-partnership-workflow.md"
+    },
+    "T-03": {
+      "number": 4,
+      "id": 5683465358,
+      "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/4",
+      "title": "T-03: Add resumable onboarding and validated CSV imports",
+      "requirements": [
+        "F-03",
+        "F-05",
+        "F-06"
+      ],
+      "blocked_by": [
+        "T-02"
+      ],
+      "file": "docs/features/partnership-intelligence-mvp/issues/t-03-onboarding-and-csv-imports.md"
+    },
+    "T-04": {
+      "number": 5,
+      "id": 5683465495,
+      "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/5",
+      "title": "T-04: Find evidence-aware introduction paths and show a focused graph",
+      "requirements": [
+        "F-07",
+        "F-08"
+      ],
+      "blocked_by": [
+        "T-02"
+      ],
+      "file": "docs/features/partnership-intelligence-mvp/issues/t-04-relationship-paths-and-graph.md"
+    },
+    "T-05": {
+      "number": 6,
+      "id": 5683465745,
+      "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/6",
+      "title": "T-05: Generate candidate batches and preserve reviewed opportunity revisions",
+      "requirements": [
+        "F-04",
+        "F-09",
+        "F-10"
+      ],
+      "blocked_by": [
+        "T-04"
+      ],
+      "file": "docs/features/partnership-intelligence-mvp/issues/t-05-opportunity-generation-and-review.md"
+    },
+    "T-06": {
+      "number": 7,
+      "id": 5683465885,
+      "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/7",
+      "title": "T-06: Track owned outreach, follow-ups, and partnership outcomes",
+      "requirements": [
+        "F-11",
+        "F-12"
+      ],
+      "blocked_by": [
+        "T-05"
+      ],
+      "file": "docs/features/partnership-intelligence-mvp/issues/t-06-outreach-and-partnership-outcomes.md"
+    },
+    "T-07": {
+      "number": 8,
+      "id": 5683465994,
+      "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/8",
+      "title": "T-07: Add optional AI briefs with evidence validation and context review",
+      "requirements": [
+        "F-13",
+        "F-14"
+      ],
+      "blocked_by": [
+        "T-05"
+      ],
+      "file": "docs/features/partnership-intelligence-mvp/issues/t-07-optional-grounded-ai-assistance.md"
+    },
+    "T-08": {
+      "number": 9,
+      "id": 5683466087,
+      "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/9",
+      "title": "T-08: Add admin-only exports, dependent-data deletion, and retention controls",
+      "requirements": [
+        "F-02",
+        "F-15"
+      ],
+      "blocked_by": [
+        "T-03",
+        "T-06",
+        "T-07"
+      ],
+      "file": "docs/features/partnership-intelligence-mvp/issues/t-08-private-data-controls.md"
+    },
+    "T-09": {
+      "number": 10,
+      "id": 5683466232,
+      "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/10",
+      "title": "T-09: Complete the fictional demo and polish the accessible product workflow",
+      "requirements": [
+        "F-16",
+        "F-17"
+      ],
+      "blocked_by": [
+        "T-03",
+        "T-06",
+        "T-07"
+      ],
+      "file": "docs/features/partnership-intelligence-mvp/issues/t-09-fictional-demo-and-accessible-ui.md"
+    },
+    "T-10": {
+      "number": 11,
+      "id": 5683466329,
+      "html_url": "https://github.com/henrikengd/partnership-intelligence/issues/11",
+      "title": "T-10: Verify self-hosting, restore, and document the MVP release",
+      "requirements": [
+        "F-01",
+        "F-18"
+      ],
+      "blocked_by": [
+        "T-08",
+        "T-09"
+      ],
+      "file": "docs/features/partnership-intelligence-mvp/issues/t-10-self-hosting-release-verification.md"
+    }
+  },
+  "subissues": [
+    "T-01",
+    "T-02",
+    "T-03",
+    "T-04",
+    "T-05",
+    "T-06",
+    "T-07",
+    "T-08",
+    "T-09",
+    "T-10"
+  ],
+  "dependencies": [
+    [
+      "T-02",
+      "T-01"
+    ],
+    [
+      "T-03",
+      "T-02"
+    ],
+    [
+      "T-04",
+      "T-02"
+    ],
+    [
+      "T-05",
+      "T-04"
+    ],
+    [
+      "T-06",
+      "T-05"
+    ],
+    [
+      "T-07",
+      "T-05"
+    ],
+    [
+      "T-08",
+      "T-03"
+    ],
+    [
+      "T-08",
+      "T-06"
+    ],
+    [
+      "T-08",
+      "T-07"
+    ],
+    [
+      "T-09",
+      "T-03"
+    ],
+    [
+      "T-09",
+      "T-06"
+    ],
+    [
+      "T-09",
+      "T-07"
+    ],
+    [
+      "T-10",
+      "T-08"
+    ],
+    [
+      "T-10",
+      "T-09"
+    ]
+  ],
+  "verified": true,
+  "status": "issues-and-native-relationships-verified"
+}
