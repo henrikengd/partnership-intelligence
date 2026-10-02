@@ -81,7 +81,7 @@ export function readiness(data: WorkspaceData) {
       const caps = data.capabilities.filter(
         (cap) =>
           cap.companyId === c.id &&
-          cap.category === n.category &&
+          cap.category.toLowerCase() === n.category.toLowerCase() &&
           data.evidence.some(
             (e) =>
               e.id === cap.evidenceId &&

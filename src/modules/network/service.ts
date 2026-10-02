@@ -20,7 +20,7 @@ export function companyPaths(data: WorkspaceData, companyId: string) {
     }),
   };
 }
-/** Authenticated projection. History is derived from completed activities, never a writable graph edge. */
+/** Authenticated projection. History derives from saved partnerships and outreach, never personal-access edges. */
 export async function getNetworkGraph(
   headers: Headers,
   filter: {
@@ -69,8 +69,40 @@ export async function getNetworkGraph(
         eq(activity.status, "completed"),
       ),
     );
-  const history: PathHistory[] = activities
-    .flatMap((a) => {
+  const history: PathHistory[] = [
+    ...data.partnerships
+      .filter((p) => !companyId || p.companyId === companyId)
+      .map((p) => {
+        const source = data.evidence.find((e) => e.id === p.evidenceId);
+        return {
+          id: p.id,
+          companyId: p.companyId,
+          kind: "partnership" as const,
+          label: p.title,
+          occurredDate: p.startDate,
+          state: p.state,
+          description: p.description,
+          source:
+            source?.attribution ?? source?.url ?? "Team partnership record",
+          recordedBy: p.recordedBy,
+          evidenceIds: p.evidenceId ? [p.evidenceId] : [],
+        };
+      }),
+    ...data.previousOutreach
+      .filter((o) => !companyId || o.companyId === companyId)
+      .map((o) => ({
+        id: o.id,
+        companyId: o.companyId,
+        kind: "outreach" as const,
+        label: `${o.channel} outreach`,
+        occurredDate: o.occurredDate,
+        state: o.outcome,
+        description: o.description,
+        source: o.source,
+        recordedBy: o.recordedBy,
+        evidenceIds: [],
+      })),
+    ...activities.flatMap((a) => {
       const opportunity = data.opportunities.find(
         (o) => o.id === a.opportunityId,
       );
@@ -89,12 +121,12 @@ export async function getNetworkGraph(
             },
           ]
         : [];
-    })
-    .sort(
-      (a, b) =>
-        (b.occurredDate ?? "").localeCompare(a.occurredDate ?? "") ||
-        a.id.localeCompare(b.id),
-    );
+    }),
+  ].sort(
+    (a, b) =>
+      (b.occurredDate ?? "").localeCompare(a.occurredDate ?? "") ||
+      a.id.localeCompare(b.id),
+  );
   return {
     data,
     companies,

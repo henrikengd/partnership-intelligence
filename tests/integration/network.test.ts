@@ -1,5 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { resetTestDatabase } from "../helpers/database";
+import { editorContext } from "../helpers/workflow";
 import { savedNetwork } from "../helpers/network";
 import {
   saveRecord,
@@ -316,5 +317,46 @@ describe("recorded network paths", () => {
       true,
     );
     expect(g.companies[0].current).toHaveLength(2);
+  });
+  it("derives partnership and attributed previous-outreach history without inventing personal routes", async () => {
+    const f = await editorContext();
+    const company = await saveRecord(f.headers, "companies", {
+      name: "Language Example",
+    });
+    const partner = await saveRecord(f.headers, "partnerships", {
+      companyId: company.id,
+      title: "Past translation support",
+      type: "expertise",
+      state: "ended",
+      startDate: "2024-01-01",
+      endDate: "2025-01-01",
+      description: "A recorded fictional contribution.",
+    });
+    const outreach = await saveRecord(f.headers, "previousOutreach", {
+      companyId: company.id,
+      contactRole: "Community partnership lead",
+      channel: "email",
+      occurredDate: "2025-02-01",
+      description: "A sourced historical inquiry.",
+      outcome: "declined",
+      source: "Fictional archived email",
+    });
+    const graph = await getNetworkGraph(f.headers, { companyId: company.id });
+    expect(graph.history.map((h) => h.id)).toEqual([outreach.id, partner.id]);
+    expect(graph.history[0]).toMatchObject({
+      kind: "outreach",
+      state: "declined",
+      source: "Fictional archived email",
+    });
+    expect(graph.history[1]).toMatchObject({
+      kind: "partnership",
+      state: "ended",
+    });
+    expect(graph.projection.edges.map((e) => e.id)).toEqual([
+      `history:${outreach.id}`,
+      `history:${partner.id}`,
+    ]);
+    expect(graph.companies[0].current).toEqual([]);
+    expect(graph.companies[0].historical).toEqual([]);
   });
 });

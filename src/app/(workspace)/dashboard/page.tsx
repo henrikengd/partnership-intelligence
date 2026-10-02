@@ -19,8 +19,8 @@ export default async function Dashboard() {
             Add your name, mission, and location before building your
             partnership network.
           </p>
-          <Link className="button" href="/settings">
-            Organization settings
+          <Link className="button" href="/onboarding">
+            Begin onboarding
           </Link>
         </div>
       </>
@@ -33,6 +33,10 @@ export default async function Dashboard() {
       <h1>{organization.name}</h1>
       <p className="muted">
         Turn recorded needs and relationships into a clear first action.
+      </p>
+      <p>
+        <Link href="/onboarding">Continue organization onboarding</Link> ·{" "}
+        <Link href="/imports">Import private records</Link>
       </p>
       <div className="stat-grid">
         <Link className="card brand" href="/needs">

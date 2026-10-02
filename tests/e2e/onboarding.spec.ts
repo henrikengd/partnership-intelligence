@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { editorContext } from "../helpers/workflow";
 test.beforeEach(async () => {
@@ -222,6 +222,19 @@ test("resumes onboarding, skips optional personal network, maps CSV and generate
     .click();
   await expect(
     page.getByText("Previous outreach saved.", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Companies", exact: true }).click();
+  await page
+    .getByRole("link", { name: "Language Example", exact: true })
+    .click();
+  await expect(
+    page.getByText("Fictional translation support", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Source: Fictional archived email", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/No permitted current internal route/),
   ).toBeVisible();
   const anonymous = await page.context().browser()!.newContext({ baseURL });
   expect((await anonymous.request.get("/api/onboarding")).status()).toBe(401);

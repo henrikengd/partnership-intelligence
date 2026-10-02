@@ -10,6 +10,8 @@ import {
   GenerateFirst,
   OnboardingControls,
 } from "@/components/onboarding-controls";
+import { RecordedGraphPanel } from "@/components/recorded-graph";
+import { projectRecordedGraph } from "@/modules/network/projection";
 import styles from "@/components/setup-workflow.module.css";
 export default async function Page() {
   const h = await headers();
@@ -146,7 +148,11 @@ export default async function Page() {
               support a brief.
             </p>
           )}
-          <Link href="/network">Review recorded people and relationships</Link>
+          <RecordedGraphPanel
+            projection={projectRecordedGraph(data)}
+            data={data}
+          />
+          <Link href="/graph">Review the recorded relationship graph</Link>
         </section>
       )}
       {ready && step === 7 && (
@@ -188,7 +194,7 @@ export default async function Page() {
           <Link href="/opportunities">Open opportunities</Link>
         </section>
       )}
-      <OnboardingControls step={step} />
+      <OnboardingControls step={step} canContinue={Boolean(org)} />
       <p>
         <Link href="/imports">Data imports</Link> ·{" "}
         <Link href="/partnerships">Partnership and outreach history</Link> ·{" "}
