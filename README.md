@@ -6,7 +6,9 @@ The product connects organizational needs, company evidence, and existing profes
 
 ## Project status
 
-The MVP is specified and tracked in GitHub Issues. Application implementation has not started. Installation commands will be added with the first implementation slice.
+The MVP is specified and tracked in GitHub Issues. The first implementation slice provides a self-hosted Next.js/PostgreSQL app, invited private accounts, and an organization profile. Other product workflows are still under development.
+
+[Start a private installation](docs/self-hosting.md) or read the [development contracts](docs/development-contracts.md). No AI key is required.
 
 Each installation serves one organization and an invited partnership team. The planned MVP includes onboarding, manual/CSV imports, a relationship graph, transparent opportunity scoring, optional AI assistance, and basic outreach tracking. It excludes automatic LinkedIn scraping, autonomous email sending, and broad web discovery.
 
