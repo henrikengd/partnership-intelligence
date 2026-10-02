@@ -16,7 +16,10 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
-    "auth:recover": "tsx scripts/recover-admin.ts"
+    "auth:recover": "tsx scripts/recover-admin.ts",
+    "predev": "tsx scripts/recover-generation-runs.ts",
+    "prestart": "tsx scripts/recover-generation-runs.ts",
+    "runs:recover": "tsx scripts/recover-generation-runs.ts"
   },
   "dependencies": {
     "@xyflow/react": "12.10.1",

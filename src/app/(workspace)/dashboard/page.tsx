@@ -3,6 +3,9 @@ import { headers } from "next/headers";
 import { getOrganization } from "@/server/organization";
 import { requirePageActor } from "@/server/auth/page";
 import { getWorkspaceData } from "@/modules/records/service";
+import { getOpportunityList } from "@/modules/opportunities/list";
+import { listGenerationRuns } from "@/modules/opportunities/runs";
+import { GenerationRuns } from "@/components/candidate-batch";
 import { getDueActions } from "@/modules/outreach/service";
 export default async function Dashboard() {
   const requestHeaders = await headers();
@@ -27,6 +30,8 @@ export default async function Dashboard() {
     );
   const data = await getWorkspaceData(requestHeaders);
   const due = await getDueActions(requestHeaders);
+  const { items } = await getOpportunityList(requestHeaders);
+  const runs = await listGenerationRuns(requestHeaders);
   return (
     <>
       <span className="eyebrow">Your partnership workspace</span>
@@ -50,6 +55,37 @@ export default async function Dashboard() {
           <strong>{data.opportunities.length}</strong>Opportunities
         </Link>
       </div>
+      <section className="card" style={{ marginBottom: 24 }}>
+        <h2>Opportunities to focus on</h2>
+        <p className="muted">
+          Ordered by unrounded rubric points, scoring coverage, nearer known
+          need deadline and stable record ID. Review readiness separately from
+          priority.
+        </p>
+        {items
+          .filter(
+            (i) => !["declined", "archived", "agreed"].includes(i.record.state),
+          )
+          .slice(0, 5)
+          .map((i) => (
+            <article className="account" key={i.record.id}>
+              <Link href={`/opportunities/${i.record.id}`}>
+                {i.company.name} · {i.need.title}
+              </Link>
+              <p>
+                {i.score?.priority.toFixed(2) ?? "Unknown"} priority points /
+                100 · {i.score?.coverage ?? 0}% scoring coverage ·{" "}
+                {i.record.reviewState.replaceAll("_", " ")}
+              </p>
+            </article>
+          ))}
+        {!items.length && (
+          <p>
+            No opportunities yet. Define an active need and preview known
+            candidates.
+          </p>
+        )}
+      </section>
       <div className="grid">
         <section className="card">
           <h2>The first useful workflow</h2>
@@ -91,6 +127,7 @@ export default async function Dashboard() {
           )}
         </section>
       </div>
+      <GenerationRuns runs={runs} />
     </>
   );
 }

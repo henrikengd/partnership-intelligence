@@ -169,10 +169,10 @@ test("resumes onboarding, skips optional personal network, maps CSV and generate
     page.getByRole("heading", { name: "Language Example", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText(
-      /Verify the relevant contact role and choose a permitted cold approach/,
-    ),
-  ).toBeVisible();
+    page.getByLabel("Recommended first action", { exact: true }),
+  ).toHaveValue(
+    /Verify the relevant contact role and choose a permitted cold approach/,
+  );
   await page.goto("/partnerships");
   await page
     .getByLabel("Partner company", { exact: true })

@@ -21,4 +21,4 @@ COPY --from=build --chown=node:node /app/scripts ./scripts
 COPY --from=build --chown=node:node /app/db ./db
 USER node
 EXPOSE 3000
-CMD ["sh", "-c", "node --import tsx scripts/validate-env.ts && node --import tsx scripts/migrate.ts && node server.js"]
+CMD ["sh", "-c", "node --import tsx scripts/validate-env.ts && node --import tsx scripts/migrate.ts && node --import tsx scripts/recover-generation-runs.ts && node server.js"]

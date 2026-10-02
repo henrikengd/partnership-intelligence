@@ -41,6 +41,7 @@ export type AssessmentInput = {
   brief: GeneratedBrief;
   evidenceIds: string[];
   inputRevision: number;
+  humanFactorKeys?: import("./scoring").FactorKey[];
 };
 export type OpportunityCandidate = {
   needId: string;

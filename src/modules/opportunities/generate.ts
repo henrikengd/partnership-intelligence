@@ -2,6 +2,7 @@ import type { WorkspaceData } from "../records/service";
 import { findDirectPaths } from "../network/paths";
 import { unknownFactors, type Factors } from "./scoring";
 import type { AssessmentInput } from "./contracts";
+import { isCurrentSource } from "./candidates";
 import { DomainError } from "../../server/errors";
 export function buildDeterministicAssessment(
   data: WorkspaceData,
@@ -49,9 +50,7 @@ export function buildDeterministicAssessment(
       ),
   );
   const factors: Factors = unknownFactors();
-  const valid = supported.filter((c) =>
-    ["supplied", "reviewed"].includes(c.evidence.reviewState),
-  );
+  const valid = supported.filter((c) => isCurrentSource(c.evidence));
   const evidenceIds = [
     ...new Set([
       ...supported.map((c) => c.evidence.id),
@@ -154,6 +153,11 @@ export function buildDeterministicAssessment(
         "A category match suggests potential relevance; it does not establish delivery feasibility.",
       ],
       questions: [
+        ...(supported.some((c) => !isCurrentSource(c.evidence))
+          ? [
+              "Some matching source records are missing, future-dated, disputed or superseded. Resolve them before asserting current fit.",
+            ]
+          : []),
         "Can the company meet the exact specification, quantity, and deadline?",
         "What value can your organization realistically offer in exchange?",
         path

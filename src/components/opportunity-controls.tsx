@@ -407,10 +407,12 @@ export function ActivityForm({
   );
 }
 export function Regenerate({
+  opportunityId,
   needId,
   companyId,
   partnershipType,
 }: {
+  opportunityId: string;
   needId: string;
   companyId: string;
   partnershipType: string;
@@ -428,6 +430,7 @@ export function Regenerate({
               needId,
               companyId,
               partnershipType,
+              refreshOpportunityId: opportunityId,
             });
             router.refresh();
           } catch (e) {

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { requirePageActor } from "@/server/auth/page";
 import { DomainError } from "@/server/errors";
 import { getOpportunityDetail } from "@/modules/opportunities/service";
+import { ReviewedActionPlan } from "@/components/reviewed-action-plan";
+import { OpportunityReviewForm } from "@/components/opportunity-review";
 import { rubric } from "@/modules/opportunities/scoring";
 import { RelationshipPaths } from "@/components/relationship-paths";
 import { companyPaths } from "@/modules/network/service";
@@ -59,8 +61,37 @@ export default async function OpportunityDetail({
         Scores prioritize work and are not success probabilities. AI is
         disabled.
       </p>
+      {record.previousOpportunityId && (
+        <p className="notice">
+          New proposal linked to{" "}
+          <Link href={`/opportunities/${record.previousOpportunityId}`}>
+            a previous closed outcome
+          </Link>
+          . Review that history before approaching again.
+        </p>
+      )}
+      {latest.humanFactorKeys.length > 0 && (
+        <p className="notice">
+          Human factor values are preserved across regeneration. Check their
+          source support again after input changes; readiness is a separate
+          review.
+        </p>
+      )}
       <div className="detail-grid">
         <div className="stack">
+          {detail.reviews[0] && (
+            <ReviewedActionPlan
+              review={detail.reviews[0]}
+              data={data}
+              companyId={record.companyId}
+              current={
+                record.reviewState === "ready_for_action" &&
+                detail.reviews[0].assessmentId === latest.id &&
+                detail.reviews[0].inputRevision === record.inputRevision &&
+                detail.reviews[0].briefRevision === record.revision
+              }
+            />
+          )}
           <section className="card">
             <h2>Why this company may fit</h2>
             {brief.claims.length ? (
@@ -128,7 +159,7 @@ export default async function OpportunityDetail({
             </ul>
           </section>
           <section className="card">
-            <h2>Via whom</h2>
+            <h2>Assessment route snapshot</h2>
             <p className="muted small">
               The route below belongs to this assessment snapshot. Changed
               records require a new assessment.
@@ -248,12 +279,30 @@ export default async function OpportunityDetail({
           <section className="card">
             <h2>Assessment history</h2>
             {versions.map((v) => (
-              <p className="muted small" key={v.id}>
-                Version {v.version} · {v.priority} points · {v.coverage}%
-                coverage · {v.createdAt.toISOString()}
-              </p>
+              <details key={v.id}>
+                <summary>
+                  Version {v.version} · {v.priority} points · {v.coverage}%
+                  coverage · {v.createdAt.toISOString()}
+                </summary>
+                <p>
+                  Input revision {v.inputRevision}. This immutable snapshot
+                  excludes later manual brief edits.
+                </p>
+                <p>{v.brief.ask}</p>
+                {rubric.map((f) => (
+                  <p key={f.key}>
+                    {f.label}: {v.factors[f.key].value ?? "Unknown"} ·{" "}
+                    {v.factors[f.key].origin} · {v.factors[f.key].rationale}
+                  </p>
+                ))}
+                <p>
+                  {v.brief.path?.nodes.map((n) => n.label).join(" → ") ??
+                    "No current path in this assessment snapshot."}
+                </p>
+              </details>
             ))}
             <Regenerate
+              opportunityId={id}
               needId={record.needId}
               companyId={record.companyId}
               partnershipType={record.partnershipType}
@@ -261,6 +310,31 @@ export default async function OpportunityDetail({
           </section>
         </div>
         <aside className="stack">
+          <OpportunityReviewForm
+            id={id}
+            brief={brief}
+            evidence={data.evidence}
+            people={data.people}
+            paths={companyPaths(data, record.companyId).current}
+            reviewState={record.reviewState}
+            stale={stale}
+          />
+          <section className="card">
+            <h2>Readiness history</h2>
+            {detail.reviews.length ? (
+              detail.reviews.map((r) => (
+                <p key={r.id}>
+                  {r.reviewedAt.toISOString()} · {r.approachMode} approach ·
+                  assessment{" "}
+                  {versions.find((v) => v.id === r.assessmentId)?.version ??
+                    "historical"}{" "}
+                  · {r.fitRationale}
+                </p>
+              ))
+            ) : (
+              <p>No readiness review recorded.</p>
+            )}
+          </section>
           <section className="card">
             <h2>Who, what to ask, and how to approach</h2>
             <p className="muted">
