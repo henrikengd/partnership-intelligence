@@ -51,16 +51,32 @@ export const companyInput = z.object({
   name: text,
   description: z.string().max(4000).default(""),
   website,
-  domain: z.string().max(254).nullable().default(null),
-  sourceId: z.string().max(254).nullable().default(null),
+  domain: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(254)
+    .regex(
+      /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
+      "Use a company domain without a URL or path.",
+    )
+    .nullable()
+    .default(null),
+  sourceId: z.string().trim().min(1).max(254).nullable().default(null),
 });
 export const personInput = z
   .object({
     id,
     name: text,
-    email: z.email().nullable().default(null),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .pipe(z.email())
+      .nullable()
+      .default(null),
     notes: z.string().max(4000).default(""),
-    sourceId: z.string().max(254).nullable().default(null),
+    sourceId: z.string().trim().min(1).max(254).nullable().default(null),
     roles: z
       .array(z.enum(["member", "alumni", "advisor", "board", "contact"]))
       .min(1)
@@ -135,6 +151,7 @@ export const capabilityInput = z.object({
 export const relationshipInput = z
   .object({
     id,
+    sourceId: z.string().trim().min(1).max(254).nullable().default(null),
     kind: z.enum([
       "works_at",
       "previously_worked_at",
@@ -207,4 +224,47 @@ export type RecordKind =
   | "companies"
   | "evidence"
   | "capabilities"
-  | "relationships";
+  | "relationships"
+  | "partnerships"
+  | "previousOutreach";
+
+export const partnershipInput = z
+  .object({
+    id,
+    sourceId: z.string().trim().min(1).max(254).nullable().default(null),
+    companyId: z.uuid(),
+    title: text,
+    type: z.string().trim().min(1).max(120),
+    state: state.default("current"),
+    startDate: nullableDate,
+    endDate: nullableDate,
+    description: z.string().max(4000).default(""),
+    evidenceId: z.uuid().nullable().default(null),
+  })
+  .refine(validRange, "Partnership dates and state must agree.");
+export const previousOutreachInput = z
+  .object({
+    id,
+    companyId: z.uuid(),
+    personId: z.uuid().nullable().default(null),
+    contactRole: z.string().max(500).default(""),
+    channel: z.enum(["email", "phone", "meeting", "message", "other"]),
+    occurredDate: calendarDate,
+    description: text,
+    outcome: z.enum([
+      "unknown",
+      "no_reply",
+      "in_discussion",
+      "declined",
+      "agreed",
+    ]),
+    source: z.string().trim().min(1).max(1000),
+  })
+  .refine(
+    (o) => o.personId || o.contactRole.trim(),
+    "Name a known target or recorded role.",
+  )
+  .refine(
+    (o) => o.occurredDate <= new Date().toISOString().slice(0, 10),
+    "Previous outreach cannot be in the future.",
+  );

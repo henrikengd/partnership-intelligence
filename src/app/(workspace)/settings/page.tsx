@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { requirePageActor } from "@/server/auth/page";
 import { getOrganization } from "@/server/organization";
@@ -27,6 +28,11 @@ export default async function Settings() {
     <>
       <span className="eyebrow">Private installation</span>
       <h1>Settings</h1>
+      <p>
+        <Link href="/onboarding">Resume onboarding</Link> ·{" "}
+        <Link href="/imports">CSV data imports</Link> ·{" "}
+        <Link href="/partnerships">Partnerships and previous outreach</Link>
+      </p>
       <div className="grid">
         {actor.role === "admin" ? (
           <>

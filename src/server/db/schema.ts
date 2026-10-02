@@ -13,6 +13,7 @@ import {
   date,
   numeric,
   jsonb,
+  index,
 } from "drizzle-orm/pg-core";
 export const accessRole = pgEnum("access_role", ["admin", "editor"]);
 const dates = {
@@ -156,14 +157,22 @@ export const need = pgTable(
     ),
   ],
 );
-export const person = pgTable("person", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  ...domainBase(),
-  name: text("name").notNull(),
-  email: text("email"),
-  sourceId: text("source_id"),
-  notes: text("notes").notNull().default(""),
-});
+export const person = pgTable(
+  "person",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    name: text("name").notNull(),
+    email: text("email"),
+    sourceId: text("source_id"),
+    notes: text("notes").notNull().default(""),
+  },
+  (t) => [
+    uniqueIndex("person_source_id")
+      .on(t.organizationId, t.sourceId)
+      .where(sql`${t.sourceId} IS NOT NULL`),
+  ],
+);
 export const affiliation = pgTable(
   "affiliation",
   {
@@ -197,15 +206,23 @@ export const affiliation = pgTable(
     ),
   ],
 );
-export const company = pgTable("company", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  ...domainBase(),
-  name: text("name").notNull(),
-  website: text("website"),
-  domain: text("domain"),
-  description: text("description").notNull().default(""),
-  sourceId: text("source_id"),
-});
+export const company = pgTable(
+  "company",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    name: text("name").notNull(),
+    website: text("website"),
+    domain: text("domain"),
+    description: text("description").notNull().default(""),
+    sourceId: text("source_id"),
+  },
+  (t) => [
+    uniqueIndex("company_source_id")
+      .on(t.organizationId, t.sourceId)
+      .where(sql`${t.sourceId} IS NOT NULL`),
+  ],
+);
 export const evidence = pgTable(
   "evidence",
   {
@@ -252,6 +269,7 @@ export const relationship = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     ...domainBase(),
+    sourceId: text("source_id"),
     kind: text("kind").notNull(),
     personId: uuid("person_id")
       .notNull()
@@ -275,6 +293,9 @@ export const relationship = pgTable(
       .references(() => evidence.id),
   },
   (t) => [
+    uniqueIndex("relationship_source_id")
+      .on(t.organizationId, t.sourceId)
+      .where(sql`${t.sourceId} IS NOT NULL`),
     check(
       "relationship_endpoints",
       sql`(${t.kind} IN ('works_at','previously_worked_at','interned_at') AND ${t.companyId} IS NOT NULL AND ${t.targetPersonId} IS NULL) OR (${t.kind} IN ('knows','introduced_by','studied_with') AND ${t.targetPersonId} IS NOT NULL AND ${t.companyId} IS NULL AND ${t.personId} <> ${t.targetPersonId})`,
@@ -418,6 +439,119 @@ export const activity = pgTable(
     check(
       "activity_kind",
       sql`${t.kind} IN ('introduction','outreach','meeting','follow_up')`,
+    ),
+  ],
+);
+
+export const partnership = pgTable(
+  "partnership",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    sourceId: text("source_id"),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => company.id),
+    title: text("title").notNull(),
+    type: text("type").notNull(),
+    state: text("state").notNull().default("current"),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    description: text("description").notNull().default(""),
+    evidenceId: uuid("evidence_id").references(() => evidence.id),
+  },
+  (t) => [
+    check(
+      "partnership_state",
+      sql`${t.state} IN ('current','ended','unknown')`,
+    ),
+    check(
+      "partnership_dates",
+      sql`${t.startDate} IS NULL OR ${t.endDate} IS NULL OR ${t.startDate} <= ${t.endDate}`,
+    ),
+    check(
+      "partnership_current_end",
+      sql`${t.state} <> 'current' OR ${t.endDate} IS NULL`,
+    ),
+    uniqueIndex("partnership_source_id")
+      .on(t.organizationId, t.sourceId)
+      .where(sql`${t.sourceId} IS NOT NULL`),
+  ],
+);
+export const previousOutreach = pgTable("previous_outreach", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ...domainBase(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => company.id),
+  personId: uuid("person_id").references(() => person.id),
+  contactRole: text("contact_role").notNull().default(""),
+  channel: text("channel").notNull(),
+  occurredDate: date("occurred_date").notNull(),
+  description: text("description").notNull(),
+  outcome: text("outcome").notNull().default("unknown"),
+  source: text("source").notNull(),
+});
+export const onboarding = pgTable(
+  "onboarding",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .unique()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    step: integer("step").notNull().default(0),
+    skippedSteps: jsonb("skipped_steps")
+      .$type<number[]>()
+      .notNull()
+      .default([]),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...dates,
+  },
+  (t) => [check("onboarding_step", sql`${t.step} BETWEEN 0 AND 8`)],
+);
+export type ImportKind =
+  "people" | "companies" | "relationships" | "partnerships";
+export type ImportRow = {
+  row: number;
+  input: Record<string, unknown>;
+  errors: string[];
+  candidates: { id: string; label: string; reason: string; revision: number }[];
+  warnings: string[];
+};
+export const importBatch = pgTable(
+  "import_batch",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    recordedBy: uuid("recorded_by")
+      .notNull()
+      .references(() => user.id),
+    kind: text("kind").$type<ImportKind>().notNull(),
+    status: text("status").notNull().default("pending"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    rows: jsonb("rows").$type<ImportRow[]>().notNull().default([]),
+    summary: jsonb("summary").$type<{
+      created: number;
+      updated: number;
+      excluded: number;
+      total: number;
+    } | null>(),
+    mappings: jsonb("mappings")
+      .$type<
+        { row: number; recordId: string; action: "created" | "updated" }[]
+      >()
+      .notNull()
+      .default([]),
+    ...dates,
+  },
+  (t) => [
+    index("import_batch_expiry").on(t.organizationId, t.status, t.expiresAt),
+    check(
+      "import_batch_status",
+      sql`${t.status} IN ('pending','committed','cancelled','expired')`,
     ),
   ],
 );

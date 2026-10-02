@@ -35,7 +35,7 @@ export function RecordEditor({
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
-  const categories = [
+  const categorySuggestions = [
     "cash",
     "manufacturing",
     "materials",
@@ -45,7 +45,7 @@ export function RecordEditor({
     "expertise",
     "volunteers",
     "other",
-  ].map((c) => option(c));
+  ];
   const companies = data.companies.map((c) => option(c.id, c.name));
   const people = data.people.map((p) => option(p.id, p.name));
   const sources = data.evidence.map((e) =>
@@ -63,9 +63,8 @@ export function RecordEditor({
       {
         name: "category",
         label: "Need category",
-        type: "select",
         required: true,
-        options: categories,
+        help: "Use a suggested category or your own. Match the capability category exactly.",
       },
       {
         name: "urgency",
@@ -98,6 +97,11 @@ export function RecordEditor({
       },
     ],
     companies: [
+      {
+        name: "sourceId",
+        label: "Company source ID",
+        help: "Stable ID from your private source for explicit reimports.",
+      },
       { name: "name", label: "Company name", required: true },
       { name: "description", label: "Company description", type: "textarea" },
       { name: "website", label: "Company website", type: "url" },
@@ -108,6 +112,7 @@ export function RecordEditor({
       },
     ],
     people: [
+      { name: "sourceId", label: "Person source ID" },
       { name: "name", label: "Person name", required: true },
       { name: "email", label: "Person email", type: "email" },
       {
@@ -199,9 +204,8 @@ export function RecordEditor({
       {
         name: "category",
         label: "Capability category",
-        type: "select",
         required: true,
-        options: categories,
+        help: "Use a suggested category or your own. Match the capability category exactly.",
       },
       {
         name: "description",
@@ -218,6 +222,7 @@ export function RecordEditor({
       },
     ],
     relationships: [
+      { name: "sourceId", label: "Relationship source ID" },
       {
         name: "personId",
         label: "Relationship person",
@@ -300,6 +305,100 @@ export function RecordEditor({
         options: [option("", "Select supplied evidence"), ...sources],
       },
     ],
+    partnerships: [
+      { name: "sourceId", label: "Partnership source ID" },
+      {
+        name: "companyId",
+        label: "Partner company",
+        type: "select",
+        required: true,
+        options: [option("", "Choose company"), ...companies],
+      },
+      { name: "title", label: "Partnership title", required: true },
+      {
+        name: "type",
+        label: "Partnership type",
+        required: true,
+        defaultValue: "in_kind",
+      },
+      {
+        name: "state",
+        label: "Partnership state",
+        type: "select",
+        options: [option("current"), option("ended"), option("unknown")],
+      },
+      { name: "startDate", label: "Partnership start", type: "date" },
+      { name: "endDate", label: "Partnership end", type: "date" },
+      {
+        name: "description",
+        label: "Partnership description",
+        type: "textarea",
+      },
+      {
+        name: "evidenceId",
+        label: "Partnership evidence",
+        type: "select",
+        options: [option("", "No supplied evidence"), ...sources],
+      },
+    ],
+    previousOutreach: [
+      {
+        name: "companyId",
+        label: "Previously contacted company",
+        type: "select",
+        required: true,
+        options: [option("", "Choose company"), ...companies],
+      },
+      {
+        name: "personId",
+        label: "Previous contact person",
+        type: "select",
+        options: [option("", "No named contact"), ...people],
+      },
+      {
+        name: "contactRole",
+        label: "Previous contact role",
+        help: "Required if no named person was recorded.",
+      },
+      {
+        name: "channel",
+        label: "Previous outreach channel",
+        type: "select",
+        options: ["email", "phone", "meeting", "message", "other"].map((c) =>
+          option(c),
+        ),
+      },
+      {
+        name: "occurredDate",
+        label: "Previous outreach date",
+        type: "date",
+        required: true,
+      },
+      {
+        name: "description",
+        label: "Previous outreach description",
+        type: "textarea",
+        required: true,
+      },
+      {
+        name: "outcome",
+        label: "Previous outreach outcome",
+        type: "select",
+        options: [
+          "unknown",
+          "no_reply",
+          "in_discussion",
+          "declined",
+          "agreed",
+        ].map((c) => option(c)),
+      },
+      {
+        name: "source",
+        label: "Previous outreach source",
+        required: true,
+        help: "Attribute the record to an existing message, meeting note or person.",
+      },
+    ],
   };
   const records = data[kind] as unknown as Record<string, unknown>[];
   function begin(record: Record<string, unknown>) {
@@ -333,6 +432,9 @@ export function RecordEditor({
         values[field.name] = new FormData(form).getAll(field.name);
       if (
         [
+          "sourceId",
+          "personId",
+          ...(kind === "partnerships" ? ["evidenceId"] : []),
           "deadline",
           "estimatedValue",
           "website",
@@ -456,6 +558,9 @@ export function RecordEditor({
               <input
                 id={`${kind}-${field.name}`}
                 name={field.name}
+                list={
+                  field.name === "category" ? "category-suggestions" : undefined
+                }
                 type={field.type ?? "text"}
                 step={field.type === "number" ? "0.01" : undefined}
                 min={field.type === "number" ? 0 : undefined}
@@ -469,6 +574,11 @@ export function RecordEditor({
             {field.help && <span className="muted small">{field.help}</span>}
           </div>
         ))}
+        <datalist id="category-suggestions">
+          {categorySuggestions.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
         <button disabled={busy}>
           {busy
             ? "Saving…"
@@ -519,6 +629,12 @@ export function RecordEditor({
                   {String(record.willingness)}
                 </p>
               )}
+              <p className="muted small" style={{ overflowWrap: "anywhere" }}>
+                Record ID: {String(record.id)}
+                {record.sourceId
+                  ? ` · Source ID: ${String(record.sourceId)}`
+                  : ""}
+              </p>
               <button
                 className="secondary small"
                 onClick={() => begin(record)}

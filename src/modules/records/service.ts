@@ -11,6 +11,8 @@ import {
   relationship,
   opportunity,
   user,
+  partnership,
+  previousOutreach,
 } from "../../server/db";
 import { requireActor } from "../../server/auth/access";
 import { DomainError } from "../../server/errors";
@@ -21,6 +23,8 @@ import {
   evidenceInput,
   capabilityInput,
   relationshipInput,
+  partnershipInput,
+  previousOutreachInput,
   type RecordKind,
 } from "./validation";
 export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -80,7 +84,17 @@ export async function readWorkspaceData(
     .select({ id: user.id, name: user.name, role: user.role })
     .from(user)
     .where(eq(user.active, true));
+  const partnerships = await connection
+    .select()
+    .from(partnership)
+    .where(eq(partnership.organizationId, org.id));
+  const previousOutreaches = await connection
+    .select()
+    .from(previousOutreach)
+    .where(eq(previousOutreach.organizationId, org.id));
   return {
+    partnerships,
+    previousOutreach: previousOutreaches,
     actor,
     organization: org,
     needs,
@@ -149,183 +163,255 @@ export async function saveRecord(
   kind: RecordKind,
   raw: unknown,
 ) {
-  const { actor, organization: org } = await workspaceContext(headers);
+  const context = await workspaceContext(headers);
   return db.transaction(async (tx) => {
     await tx
       .select({ id: organization.id })
       .from(organization)
-      .where(eq(organization.id, org.id))
+      .where(eq(organization.id, context.organization.id))
       .for("update");
-    const base = {
-      organizationId: org.id,
-      recordedBy: actor.id,
-      updatedAt: new Date(),
-    };
-    switch (kind) {
-      case "needs": {
-        const { id, ...input } = needInput.parse(raw);
-        if (id) await assertReference(tx, org.id, "needs", id);
-        const [record] = id
-          ? await tx
-              .update(need)
-              .set({
-                ...input,
-                updatedAt: base.updatedAt,
-                revision: sql`${need.revision}+1`,
-              })
-              .where(eq(need.id, id))
-              .returning()
-          : await tx
-              .insert(need)
-              .values({ ...input, ...base })
-              .returning();
-        await invalidateAssessments(tx, org.id);
-        return record;
-      }
-      case "companies": {
-        const { id, ...input } = companyInput.parse(raw);
-        if (id) await assertReference(tx, org.id, "companies", id);
-        const [record] = id
-          ? await tx
-              .update(company)
-              .set({
-                ...input,
-                updatedAt: base.updatedAt,
-                revision: sql`${company.revision}+1`,
-              })
-              .where(eq(company.id, id))
-              .returning()
-          : await tx
-              .insert(company)
-              .values({ ...input, ...base })
-              .returning();
-        await invalidateAssessments(tx, org.id);
-        return record;
-      }
-      case "people": {
-        const {
-          id,
-          roles,
-          affiliationState,
-          affiliationStartDate,
-          affiliationEndDate,
-          ...input
-        } = personInput.parse(raw);
-        if (id) await assertReference(tx, org.id, "people", id);
-        const [record] = id
-          ? await tx
-              .update(person)
-              .set({
-                ...input,
-                updatedAt: base.updatedAt,
-                revision: sql`${person.revision}+1`,
-              })
-              .where(eq(person.id, id))
-              .returning()
-          : await tx
-              .insert(person)
-              .values({ ...input, ...base })
-              .returning();
-        await tx.delete(affiliation).where(eq(affiliation.personId, record.id));
-        await tx.insert(affiliation).values(
-          [...new Set(roles)].map((role) => ({
-            ...base,
-            personId: record.id,
-            role,
-            state: affiliationState,
-            startDate: affiliationStartDate,
-            endDate: affiliationEndDate,
-          })),
-        );
-        await invalidateAssessments(tx, org.id);
-        return record;
-      }
-      case "evidence": {
-        const { id, ...input } = evidenceInput.parse(raw);
-        if (id) await assertReference(tx, org.id, "evidence", id);
-        const [record] = id
-          ? await tx
-              .update(evidence)
-              .set({
-                ...input,
-                updatedAt: base.updatedAt,
-                revision: sql`${evidence.revision}+1`,
-              })
-              .where(eq(evidence.id, id))
-              .returning()
-          : await tx
-              .insert(evidence)
-              .values({ ...input, ...base })
-              .returning();
-        await invalidateAssessments(tx, org.id);
-        return record;
-      }
-      case "capabilities": {
-        const { id, ...input } = capabilityInput.parse(raw);
-        await assertReference(tx, org.id, "companies", input.companyId);
-        await assertReference(tx, org.id, "evidence", input.evidenceId);
-        if (
-          id &&
-          !(await tx.query.capability.findFirst({
-            where: and(
-              eq(capability.id, id),
-              eq(capability.organizationId, org.id),
-            ),
-          }))
-        )
-          throw new DomainError("NOT_FOUND", "Capability not found.", 404);
-        const [record] = id
-          ? await tx
-              .update(capability)
-              .set({
-                ...input,
-                updatedAt: base.updatedAt,
-                revision: sql`${capability.revision}+1`,
-              })
-              .where(eq(capability.id, id))
-              .returning()
-          : await tx
-              .insert(capability)
-              .values({ ...input, ...base })
-              .returning();
-        await invalidateAssessments(tx, org.id);
-        return record;
-      }
-      case "relationships": {
-        const { id, ...input } = relationshipInput.parse(raw);
-        await assertReference(tx, org.id, "people", input.personId);
-        if (input.targetPersonId)
-          await assertReference(tx, org.id, "people", input.targetPersonId);
-        if (input.companyId)
-          await assertReference(tx, org.id, "companies", input.companyId);
-        await assertReference(tx, org.id, "evidence", input.evidenceId);
-        if (
-          id &&
-          !(await tx.query.relationship.findFirst({
-            where: and(
-              eq(relationship.id, id),
-              eq(relationship.organizationId, org.id),
-            ),
-          }))
-        )
-          throw new DomainError("NOT_FOUND", "Relationship not found.", 404);
-        const [record] = id
-          ? await tx
-              .update(relationship)
-              .set({
-                ...input,
-                updatedAt: base.updatedAt,
-                revision: sql`${relationship.revision}+1`,
-              })
-              .where(eq(relationship.id, id))
-              .returning()
-          : await tx
-              .insert(relationship)
-              .values({ ...input, ...base })
-              .returning();
-        await invalidateAssessments(tx, org.id);
-        return record;
-      }
-    }
+    return saveRecordInTransaction(tx, context, kind, raw);
   });
+}
+export async function saveRecordInTransaction(
+  tx: Transaction,
+  { actor, organization: org }: Awaited<ReturnType<typeof workspaceContext>>,
+  kind: RecordKind,
+  raw: unknown,
+) {
+  const base = {
+    organizationId: org.id,
+    recordedBy: actor.id,
+    updatedAt: new Date(),
+  };
+  switch (kind) {
+    case "needs": {
+      const { id, ...input } = needInput.parse(raw);
+      if (id) await assertReference(tx, org.id, "needs", id);
+      const [record] = id
+        ? await tx
+            .update(need)
+            .set({
+              ...input,
+              updatedAt: base.updatedAt,
+              revision: sql`${need.revision}+1`,
+            })
+            .where(eq(need.id, id))
+            .returning()
+        : await tx
+            .insert(need)
+            .values({ ...input, ...base })
+            .returning();
+      await invalidateAssessments(tx, org.id);
+      return record;
+    }
+    case "companies": {
+      const { id, ...input } = companyInput.parse(raw);
+      if (id) await assertReference(tx, org.id, "companies", id);
+      const [record] = id
+        ? await tx
+            .update(company)
+            .set({
+              ...input,
+              updatedAt: base.updatedAt,
+              revision: sql`${company.revision}+1`,
+            })
+            .where(eq(company.id, id))
+            .returning()
+        : await tx
+            .insert(company)
+            .values({ ...input, ...base })
+            .returning();
+      await invalidateAssessments(tx, org.id);
+      return record;
+    }
+    case "people": {
+      const {
+        id,
+        roles,
+        affiliationState,
+        affiliationStartDate,
+        affiliationEndDate,
+        ...input
+      } = personInput.parse(raw);
+      if (id) await assertReference(tx, org.id, "people", id);
+      const [record] = id
+        ? await tx
+            .update(person)
+            .set({
+              ...input,
+              updatedAt: base.updatedAt,
+              revision: sql`${person.revision}+1`,
+            })
+            .where(eq(person.id, id))
+            .returning()
+        : await tx
+            .insert(person)
+            .values({ ...input, ...base })
+            .returning();
+      await tx.delete(affiliation).where(eq(affiliation.personId, record.id));
+      await tx.insert(affiliation).values(
+        [...new Set(roles)].map((role) => ({
+          ...base,
+          personId: record.id,
+          role,
+          state: affiliationState,
+          startDate: affiliationStartDate,
+          endDate: affiliationEndDate,
+        })),
+      );
+      await invalidateAssessments(tx, org.id);
+      return record;
+    }
+    case "evidence": {
+      const { id, ...input } = evidenceInput.parse(raw);
+      if (id) await assertReference(tx, org.id, "evidence", id);
+      const [record] = id
+        ? await tx
+            .update(evidence)
+            .set({
+              ...input,
+              updatedAt: base.updatedAt,
+              revision: sql`${evidence.revision}+1`,
+            })
+            .where(eq(evidence.id, id))
+            .returning()
+        : await tx
+            .insert(evidence)
+            .values({ ...input, ...base })
+            .returning();
+      await invalidateAssessments(tx, org.id);
+      return record;
+    }
+    case "capabilities": {
+      const { id, ...input } = capabilityInput.parse(raw);
+      await assertReference(tx, org.id, "companies", input.companyId);
+      await assertReference(tx, org.id, "evidence", input.evidenceId);
+      if (
+        id &&
+        !(await tx.query.capability.findFirst({
+          where: and(
+            eq(capability.id, id),
+            eq(capability.organizationId, org.id),
+          ),
+        }))
+      )
+        throw new DomainError("NOT_FOUND", "Capability not found.", 404);
+      const [record] = id
+        ? await tx
+            .update(capability)
+            .set({
+              ...input,
+              updatedAt: base.updatedAt,
+              revision: sql`${capability.revision}+1`,
+            })
+            .where(eq(capability.id, id))
+            .returning()
+        : await tx
+            .insert(capability)
+            .values({ ...input, ...base })
+            .returning();
+      await invalidateAssessments(tx, org.id);
+      return record;
+    }
+    case "relationships": {
+      const { id, ...input } = relationshipInput.parse(raw);
+      await assertReference(tx, org.id, "people", input.personId);
+      if (input.targetPersonId)
+        await assertReference(tx, org.id, "people", input.targetPersonId);
+      if (input.companyId)
+        await assertReference(tx, org.id, "companies", input.companyId);
+      await assertReference(tx, org.id, "evidence", input.evidenceId);
+      if (
+        id &&
+        !(await tx.query.relationship.findFirst({
+          where: and(
+            eq(relationship.id, id),
+            eq(relationship.organizationId, org.id),
+          ),
+        }))
+      )
+        throw new DomainError("NOT_FOUND", "Relationship not found.", 404);
+      const [record] = id
+        ? await tx
+            .update(relationship)
+            .set({
+              ...input,
+              updatedAt: base.updatedAt,
+              revision: sql`${relationship.revision}+1`,
+            })
+            .where(eq(relationship.id, id))
+            .returning()
+        : await tx
+            .insert(relationship)
+            .values({ ...input, ...base })
+            .returning();
+      await invalidateAssessments(tx, org.id);
+      return record;
+    }
+    case "partnerships": {
+      const { id, ...input } = partnershipInput.parse(raw);
+      await assertReference(tx, org.id, "companies", input.companyId);
+      if (input.evidenceId)
+        await assertReference(tx, org.id, "evidence", input.evidenceId);
+      if (
+        id &&
+        !(await tx.query.partnership.findFirst({
+          where: and(
+            eq(partnership.id, id),
+            eq(partnership.organizationId, org.id),
+          ),
+        }))
+      )
+        throw new DomainError("NOT_FOUND", "Partnership not found.", 404);
+      const [record] = id
+        ? await tx
+            .update(partnership)
+            .set({
+              ...input,
+              updatedAt: base.updatedAt,
+              revision: sql`${partnership.revision}+1`,
+            })
+            .where(eq(partnership.id, id))
+            .returning()
+        : await tx
+            .insert(partnership)
+            .values({ ...input, ...base })
+            .returning();
+      await invalidateAssessments(tx, org.id);
+      return record;
+    }
+    case "previousOutreach": {
+      const { id, ...input } = previousOutreachInput.parse(raw);
+      await assertReference(tx, org.id, "companies", input.companyId);
+      if (input.personId)
+        await assertReference(tx, org.id, "people", input.personId);
+      if (
+        id &&
+        !(await tx.query.previousOutreach.findFirst({
+          where: and(
+            eq(previousOutreach.id, id),
+            eq(previousOutreach.organizationId, org.id),
+          ),
+        }))
+      )
+        throw new DomainError("NOT_FOUND", "Previous outreach not found.", 404);
+      const [record] = id
+        ? await tx
+            .update(previousOutreach)
+            .set({
+              ...input,
+              updatedAt: base.updatedAt,
+              revision: sql`${previousOutreach.revision}+1`,
+            })
+            .where(eq(previousOutreach.id, id))
+            .returning()
+        : await tx
+            .insert(previousOutreach)
+            .values({ ...input, ...base })
+            .returning();
+      await invalidateAssessments(tx, org.id);
+      return record;
+    }
+  }
 }

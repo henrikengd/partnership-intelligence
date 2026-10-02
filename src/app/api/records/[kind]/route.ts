@@ -8,6 +8,8 @@ const kindSchema = z.enum([
   "evidence",
   "capabilities",
   "relationships",
+  "partnerships",
+  "previousOutreach",
 ]);
 export async function GET(
   request: Request,

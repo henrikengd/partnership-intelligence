@@ -21,7 +21,7 @@ test("invited editor enters a machining opportunity and records a completed intr
   await page
     .getByLabel("Need description")
     .fill("Machine ten workshop fixtures from supplied drawings.");
-  await page.getByLabel("Need category").selectOption("manufacturing");
+  await page.getByLabel("Need category").fill("manufacturing");
   await page.getByLabel("Urgency", { exact: true }).selectOption("2");
   await page.getByRole("button", { name: "Save need", exact: true }).click();
   await expect(page.getByText("Need saved.", { exact: true })).toBeVisible();
@@ -53,7 +53,7 @@ test("invited editor enters a machining opportunity and records a completed intr
   await page
     .getByLabel("Capability company")
     .selectOption({ label: "Cedar Manufacturing" });
-  await page.getByLabel("Capability category").selectOption("manufacturing");
+  await page.getByLabel("Capability category").fill("manufacturing");
   await page
     .getByLabel("Capability description")
     .fill("CNC machining for workshop fixtures");

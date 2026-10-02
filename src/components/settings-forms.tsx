@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 type Organization = {
   name: string;
   mission: string;
@@ -34,6 +35,7 @@ export function OrganizationForm({
 }: {
   initial: Organization | null;
 }) {
+  const router = useRouter();
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -56,6 +58,7 @@ export function OrganizationForm({
             "PUT",
           );
           setSaved(true);
+          router.refresh();
         } catch (e) {
           setError(e instanceof Error ? e.message : "Try again.");
         } finally {
