@@ -73,3 +73,9 @@ Worker b9cf10051d2bb6f0a06d6772c90f656aa00b9891 integrated cleanly as ca411ec3bc
 ## T-06 schema handoff
 
 Schema-only worker7a7a25693ecb2b1db836c448005e7b429cc4787f integrated as8d73b10. Root inspected SQL/schema, applied migration0006 to isolated pi_integration and passed typecheck. This releases metadata to T-07, which adopted it as e3216aeada8b62cbd546df281fa860d48f47bdfa. T-06 continues services/UI/tests without further schema edits; both tickets remain open pending complete integrated verification. Root mounts LifecycleControls, AiDraftPanel(opportunityId) and AiSettings, and extends startup recovery with recoverInterruptedAiRuns. T-07 private referenceMap will support later person/source snapshot purge.
+
+## Early T-06 and T-07 checks
+
+Bounded read-only T-06 review of changing sources atop7a7a256 identified legacy completion dates invented on follow-up edits, resolved follow-ups remaining resolved after rescheduling, and linked partnerships movable to another company. Root also identified agreement-date coupling to contribution dates and the older graph-history projection using recording dates as occurrence dates. Worker reports repairs and PostgreSQL regressions in progress; root has not integrated or verified this application work yet.
+
+Bounded read-only T-07 review of changing sources atop adopted e3216ae identified short recorded names omitted by minimization and saved-run history depending on a valid new outbound packet. Root also requested exact source preview, generic role choice, named-contact/route compatibility, rejection of invented names mixed with legitimate roles, Unicode/email cases, empty/partial draft checks, free-text invented score/probability checks, bounded UTF-8 envelopes and stable action keys after uncertain client responses. Worker is repairing/testing these in isolation. No completed T-06/T-07 or final feature review is claimed.
