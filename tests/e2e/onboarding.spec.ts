@@ -250,3 +250,57 @@ test("resumes onboarding, skips optional personal network, maps CSV and generate
   ).toBe(401);
   await anonymous.close();
 });
+
+test("switches saved previews with recent-batch links and commits only the visible batch", async ({
+  page,
+  baseURL,
+}) => {
+  await page.goto("/login");
+  await page.getByLabel("Email", { exact: true }).fill("editor@example.test");
+  await page
+    .getByLabel("Password", { exact: true })
+    .fill("Fictional-password-123");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  const create = async (name: string, sourceId: string) => {
+    const response = await page.request.post("/api/imports", {
+      headers: { Origin: baseURL! },
+      multipart: {
+        kind: "companies",
+        phase: "preview",
+        mapping: JSON.stringify({ name: "name", source_id: "source_id" }),
+        file: {
+          name: "fictional.csv",
+          mimeType: "text/csv",
+          buffer: Buffer.from(`name,source_id\n${name},${sourceId}`),
+        },
+      },
+    });
+    expect(response.status()).toBe(200);
+    return response.json();
+  };
+  const first = await create("Preview One", "preview-one");
+  const second = await create("Preview Two", "preview-two");
+  await page.goto(`/imports?batch=${first.id}`);
+  await expect(page.getByText("Preview One", { exact: true })).toBeVisible();
+  await page.locator(`a[href="/imports?batch=${second.id}"]`).click();
+  await expect(page).toHaveURL(new RegExp(second.id));
+  await expect(page.getByText("Preview Two", { exact: true })).toBeVisible();
+  await expect(page.getByText("Preview One", { exact: true })).toHaveCount(0);
+  await page.getByLabel("Resolution for row 2").selectOption("create");
+  const submitted = page.waitForResponse(
+    (response) =>
+      response.url().endsWith(`/api/imports/${second.id}`) &&
+      response.request().method() === "POST",
+  );
+  await page
+    .getByRole("button", { name: "Commit selected rows", exact: true })
+    .click();
+  expect((await submitted).status()).toBe(200);
+  expect(
+    (await (await page.request.get(`/api/imports/${first.id}`)).json()).status,
+  ).toBe("pending");
+  expect(
+    (await (await page.request.get(`/api/imports/${second.id}`)).json()).status,
+  ).toBe("committed");
+});

@@ -52,7 +52,14 @@ export default async function Page({
         private and are cleared on cancel, commit or the next import operation
         after expiry.
       </p>
-      <ImportWorkflow initial={initial} />
+      <ImportWorkflow
+        key={
+          initial
+            ? `${initial.id}:${initial.status}:${initial.updatedAt.getTime()}`
+            : "new"
+        }
+        initial={initial}
+      />
       {batches.length > 0 && (
         <section className="card">
           <h2>Recent import batches</h2>

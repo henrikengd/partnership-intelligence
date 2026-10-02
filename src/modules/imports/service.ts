@@ -136,6 +136,11 @@ export async function previewImport(
       );
     keys.forEach((key) => seen.add(key));
     const matches = candidates(kind, normalized.input, data);
+    const sourceMatch = matches.find((m) => m.reason === "source ID");
+    if (sourceMatch && matches.some((m) => m.id !== sourceMatch.id))
+      normalized.errors.push(
+        "The source ID and exact email/domain identify different saved records. Correct the row or explicitly exclude it.",
+      );
     const name = normalized.input.name;
     const sameName =
       name &&
@@ -298,6 +303,17 @@ export async function commitImport(headers: Headers, id: string, raw: unknown) {
         throw new DomainError(
           "RESOLUTION_REQUIRED",
           `Row ${row.row} must explicitly select a proposed identity.`,
+        );
+      const sourceMatch = current.find((c) => c.reason === "source ID");
+      if (
+        decision.action === "update" &&
+        sourceMatch &&
+        decision.recordId !== sourceMatch.id
+      )
+        throw new DomainError(
+          "IDENTITY_CONFLICT",
+          `Row ${row.row} has a source ID owned by another saved record. Correct the file and preview again.`,
+          409,
         );
       if (
         decision.action === "create" &&

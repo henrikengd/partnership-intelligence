@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ImportKind, ImportRow } from "@/server/db/schema";
 import styles from "./setup-workflow.module.css";
@@ -27,6 +27,8 @@ export function ImportWorkflow({ initial }: { initial: Batch | null }) {
   const [decisions, setDecisions] = useState<Record<number, string>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const working = busy || pending;
   const [count, setCount] = useState(0);
   async function request(url: string, init: RequestInit) {
     const response = await fetch(url, init);
@@ -67,11 +69,9 @@ export function ImportWorkflow({ initial }: { initial: Batch | null }) {
           ),
         );
       } else {
-        setBatch(result);
-        setDecisions({});
-        setFile(null);
-        setColumns([]);
-        router.replace(`/imports?batch=${result.id}`);
+        // Render the saved preview only after navigation supplies its keyed server state.
+        // Showing it before that remount would let the user make decisions that navigation discards.
+        startTransition(() => router.replace(`/imports?batch=${result.id}`));
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Try again.");
@@ -116,7 +116,7 @@ export function ImportWorkflow({ initial }: { initial: Batch | null }) {
           summary: result.summary,
         });
       }
-      router.refresh();
+      startTransition(() => router.refresh());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Try again.");
     } finally {
@@ -125,6 +125,7 @@ export function ImportWorkflow({ initial }: { initial: Batch | null }) {
   }
   return (
     <div className={styles.workflow}>
+      {pending && <p aria-live="polite">Loading the saved import view…</p>}
       {error && (
         <p role="alert" className="error">
           {error}
@@ -170,7 +171,7 @@ export function ImportWorkflow({ initial }: { initial: Batch | null }) {
           />
           <button
             className="secondary"
-            disabled={busy}
+            disabled={working}
             onClick={() => upload("headers")}
           >
             Read columns
@@ -200,7 +201,7 @@ export function ImportWorkflow({ initial }: { initial: Batch | null }) {
                   </div>
                 ))}
               </div>
-              <button disabled={busy} onClick={() => upload("preview")}>
+              <button disabled={working} onClick={() => upload("preview")}>
                 Validate and preview
               </button>
             </>
@@ -219,12 +220,12 @@ export function ImportWorkflow({ initial }: { initial: Batch | null }) {
               defaults; review each proposed record.
             </p>
             <div className="row">
-              <button disabled={busy} onClick={() => finish()}>
+              <button disabled={working} onClick={() => finish()}>
                 Commit selected rows
               </button>
               <button
                 className="secondary"
-                disabled={busy}
+                disabled={working}
                 onClick={() => finish(true)}
               >
                 Cancel preview
@@ -309,13 +310,8 @@ export function ImportWorkflow({ initial }: { initial: Batch | null }) {
             <p>No business records were changed by this preview.</p>
           )}
           <button
-            onClick={() => {
-              setBatch(null);
-              setFile(null);
-              setColumns([]);
-              setDecisions({});
-              router.replace("/imports");
-            }}
+            disabled={working}
+            onClick={() => startTransition(() => router.replace("/imports"))}
           >
             Start another import
           </button>

@@ -450,4 +450,57 @@ describe("atomic private imports and saved onboarding", () => {
       .where(eq(evidence.id, e.id));
     expect(readiness(await getWorkspaceData(f.headers)).supported).toEqual([]);
   });
+  it("reports conflicting source IDs versus email/domain before writing, including older saved previews", async () => {
+    const f = await editorContext();
+    for (const kind of ["people", "companies"] as const) {
+      const field = kind === "people" ? "email" : "domain";
+      const identityA =
+        kind === "people" ? "alpha@example.test" : "alpha.example.test";
+      const identityB =
+        kind === "people" ? "beta@example.test" : "beta.example.test";
+      const extra = kind === "people" ? { roles: ["member"] } : {};
+      const first = await saveRecord(f.headers, kind, {
+        sourceId: "alpha",
+        name: "Alpha Example",
+        [field]: identityA,
+        ...extra,
+      });
+      const second = await saveRecord(f.headers, kind, {
+        sourceId: "beta",
+        name: "Beta Example",
+        [field]: identityB,
+        ...extra,
+      });
+      const batch = await previewImport(
+        f.headers,
+        kind,
+        bytes(
+          `source_id,name,${field}${kind === "people" ? ",roles" : ""}\nalpha,Conflicting Example,${identityB}${kind === "people" ? ",member" : ""}`,
+        ),
+        mapping(kind),
+      );
+      expect(batch.rows[0].errors.join()).toContain(
+        "identify different saved records",
+      );
+      await expect(
+        commitImport(f.headers, batch.id, [
+          { row: 2, action: "update", recordId: second.id },
+        ]),
+      ).rejects.toMatchObject({ code: "INVALID_ROWS" });
+      // A pre-upgrade preview may not carry the new validation error. Confirmation must still reject the incompatible target.
+      await db
+        .update(importBatch)
+        .set({ rows: batch.rows.map((row) => ({ ...row, errors: [] })) })
+        .where(eq(importBatch.id, batch.id));
+      await expect(
+        commitImport(f.headers, batch.id, [
+          { row: 2, action: "update", recordId: second.id },
+        ]),
+      ).rejects.toMatchObject({ code: "IDENTITY_CONFLICT", status: 409 });
+      const records = (await getWorkspaceData(f.headers))[kind];
+      expect(records.find((r) => r.id === first.id)?.sourceId).toBe("alpha");
+      expect(records.find((r) => r.id === second.id)?.sourceId).toBe("beta");
+      await cancelImport(f.headers, batch.id);
+    }
+  });
 });
