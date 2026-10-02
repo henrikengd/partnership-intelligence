@@ -34,7 +34,7 @@ export async function limitPublicEndpoint(key: string, maximum: number) {
       429,
     );
 }
-export async function readJson(request: Request) {
+export async function readJson(request: Request, maximumBytes = 16_384) {
   if (!request.headers.get("content-type")?.startsWith("application/json"))
     throw new DomainError("INVALID_CONTENT_TYPE", "Send a JSON request.", 415);
   const reader = request.body?.getReader();
@@ -46,7 +46,7 @@ export async function readJson(request: Request) {
     const { value, done } = await reader.read();
     if (done) break;
     length += value.length;
-    if (length > 16_384) {
+    if (length > maximumBytes) {
       await reader.cancel();
       throw new DomainError("BODY_TOO_LARGE", "The request is too large.", 413);
     }

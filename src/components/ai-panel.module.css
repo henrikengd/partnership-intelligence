@@ -1,0 +1,21 @@
+.panel {
+  min-width: 0;
+}
+.packet {
+  width: 100%;
+  min-height: 20rem;
+  font-family: monospace;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.result {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}

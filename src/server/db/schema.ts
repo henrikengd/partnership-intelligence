@@ -738,3 +738,82 @@ export const opportunityEvent = pgTable(
     ),
   ],
 );
+
+// AI results are suggestions only. They never replace assessments or manualBrief.
+export const aiConfiguration = pgTable(
+  "ai_configuration",
+  {
+    organizationId: uuid("organization_id")
+      .primaryKey()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    enabled: boolean("enabled").notNull().default(false),
+    provider: text("provider").notNull().default("openai"),
+    model: text("model").notNull().default(""),
+    updatedBy: uuid("updated_by")
+      .notNull()
+      .references(() => user.id),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [check("ai_provider_allowed", sql`${t.provider} = 'openai'`)],
+);
+export const aiRun = pgTable(
+  "ai_run",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => opportunity.id, { onDelete: "cascade" }),
+    assessmentId: uuid("assessment_id")
+      .notNull()
+      .references(() => assessment.id, { onDelete: "cascade" }),
+    requestedBy: uuid("requested_by")
+      .notNull()
+      .references(() => user.id),
+    inputRevision: integer("input_revision").notNull(),
+    idempotencyKey: uuid("idempotency_key").notNull(),
+    requestFingerprint: text("request_fingerprint").notNull(),
+    lastActionKey: uuid("last_action_key").notNull(),
+    lastActionFingerprint: text("last_action_fingerprint").notNull(),
+    status: text("status").notNull().default("running"),
+    attempt: integer("attempt").notNull().default(1),
+    packet: jsonb("packet")
+      .$type<import("../ai/contracts").AiPacket>()
+      .notNull(),
+    referenceMap: jsonb("reference_map")
+      .$type<import("../ai/contracts").ReferenceMap>()
+      .notNull(),
+    model: text("model").notNull(),
+    configRevision: timestamp("config_revision", {
+      withTimezone: true,
+    }).notNull(),
+    draft: jsonb("draft").$type<import("../ai/contracts").AiDraft>(),
+    errorCategory: text("error_category"),
+    startedAt: timestamp("started_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ai_run_idempotency").on(t.organizationId, t.idempotencyKey),
+    uniqueIndex("ai_run_one_live_call")
+      .on(t.organizationId)
+      .where(sql`${t.status} = 'running'`),
+    check(
+      "ai_run_status",
+      sql`${t.status} IN ('running','completed','failed','interrupted')`,
+    ),
+    check("ai_run_attempt", sql`${t.attempt} BETWEEN 1 AND 2`),
+    check(
+      "ai_run_finish",
+      sql`(${t.status}='running' AND ${t.finishedAt} IS NULL) OR (${t.status}<>'running' AND ${t.finishedAt} IS NOT NULL)`,
+    ),
+  ],
+);
