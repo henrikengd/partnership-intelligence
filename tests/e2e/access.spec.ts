@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 test("setup, private organization, invite, editor, and revoked direct access", async ({
   page,
   browser,

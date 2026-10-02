@@ -1,13 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { editorContext } from "../helpers/workflow";
-import { pool } from "../../src/server/db";
 test.beforeEach(async () => {
   await resetTestDatabase();
   await editorContext();
-});
-test.afterAll(async () => {
-  await pool.end();
 });
 test("invited editor enters a machining opportunity and records a completed introduction action", async ({
   page,
@@ -103,11 +99,9 @@ test("invited editor enters a machining opportunity and records a completed intr
     .selectOption({ label: "Cedar Manufacturing" });
   await page.getByLabel("Recorded job or contact title").fill("Engineer");
   await page.getByLabel("Relationship start").fill("2024-01-01");
-  await page
-    .getByLabel("Relationship evidence")
-    .selectOption({
-      label: "Anna reports current employment at Cedar (supplied)",
-    });
+  await page.getByLabel("Relationship evidence").selectOption({
+    label: "Anna reports current employment at Cedar (supplied)",
+  });
   await page
     .getByRole("button", { name: "Save relationship", exact: true })
     .click();

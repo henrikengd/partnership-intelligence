@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { savedNetwork } from "../helpers/network";
 import { saveRecord } from "../../src/modules/records/service";

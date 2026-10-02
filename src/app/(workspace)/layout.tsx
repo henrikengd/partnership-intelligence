@@ -31,6 +31,7 @@ export default async function WorkspaceLayout({
           <Link href="/needs">Needs</Link>
           <Link href="/network">Network</Link>
           <Link href="/companies">Companies</Link>
+          <Link href="/graph">Graph</Link>
           <Link href="/opportunities">Opportunities</Link>
           <Link href="/settings">Settings</Link>
         </nav>

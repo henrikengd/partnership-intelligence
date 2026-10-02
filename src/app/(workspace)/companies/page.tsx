@@ -27,6 +27,20 @@ export default async function Page() {
         Save known companies and supplied evidence. The app does not fetch URLs
         or research companies automatically.
       </p>
+      <section className="card">
+        <h2>Recorded companies</h2>
+        {data.companies.length ? (
+          <ul>
+            {data.companies.map((company) => (
+              <li key={company.id}>
+                <Link href={`/companies/${company.id}`}>{company.name}</Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="muted">Add your first known company below.</p>
+        )}
+      </section>
       <div className="grid record-grid">
         <RecordEditor kind="companies" title="Company" data={data} />
         <RecordEditor kind="evidence" title="Evidence" data={data} />

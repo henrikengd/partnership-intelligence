@@ -5,6 +5,8 @@ import { requirePageActor } from "@/server/auth/page";
 import { DomainError } from "@/server/errors";
 import { getOpportunityDetail } from "@/modules/opportunities/service";
 import { rubric } from "@/modules/opportunities/scoring";
+import { RelationshipPaths } from "@/components/relationship-paths";
+import { companyPaths } from "@/modules/network/service";
 import { PathGraph } from "@/components/path-graph";
 import {
   ActivityForm,
@@ -127,6 +129,10 @@ export default async function OpportunityDetail({
           </section>
           <section className="card">
             <h2>Via whom</h2>
+            <p className="muted small">
+              The route below belongs to this assessment snapshot. Changed
+              records require a new assessment.
+            </p>
             {brief.path ? (
               <>
                 <PathGraph path={brief.path} />
@@ -165,6 +171,24 @@ export default async function OpportunityDetail({
                 identified cold approach after verifying a relevant role.
               </p>
             )}
+          </section>
+          <section className="card">
+            <details>
+              <summary>
+                Compare current recorded routes and historical leads
+              </summary>
+              <p className="muted">
+                These routes reflect current records. They do not refresh or
+                approve the stored assessment.
+              </p>
+              <RelationshipPaths
+                paths={companyPaths(data, record.companyId)}
+                data={data}
+              />
+              <Link href={`/graph?opportunity=${id}`}>
+                Open focused opportunity graph
+              </Link>
+            </details>
           </section>
           <section className="card">
             <h2>Transparent priority assessment</h2>
