@@ -20,7 +20,7 @@ T-02 / #3 is running with worker /root/foundation in /Users/henrik.noteless/.cod
 
 Early read-only foundation review: /root/test_runtime completed F-01/F-02 inspection at 2f9e821 plus documentation commit 7379d5e. No material security/correctness findings. An unused organizationExists helper returned Boolean(array), which is always true; T-02 worker is assigned to correct it before onboarding use. Settings correctly requests other-session revocation on password changes. This bounded review is not the final full-feature review. No reviewer mutated files or databases.
 
-Runtime prerequisite resolved. Node v24.19.0 and npm 11.17.0 are available. Isolated Colima profile partnership-intelligence runs Docker, with DOCKER_CONFIG=/private/tmp/pi-docker-config and DOCKER_CONTEXT=colima-partnership-intelligence. PostgreSQL 18.6 test containers use localhost 5541 for pi_t01 and 5540 for pi_integration. The profile does not change the user's default Docker context. Operational commands are in the original workspace's ignored .local/runtime.md. Foundation Compose project pi-t01-smoke is stopped with its volume retained. No development server currently reserves port 3102.
+Runtime prerequisite resolved. Node v24.19.0 and npm 11.17.0 are available. Isolated Colima profile partnership-intelligence runs Docker, with DOCKER_CONFIG=/private/tmp/pi-docker-config and DOCKER_CONTEXT=colima-partnership-intelligence. PostgreSQL 18.6 test containers use localhost 5541 for pi_t01 and 5540 for pi_integration. A separate pi-t04-postgres container exposes localhost 5544, also with an isolated database named pi_t01 to satisfy the existing destructive-test guard. No current worker shares that container. The profile does not change the user's default Docker context. Operational commands are in the original workspace's ignored .local/runtime.md. Foundation Compose project pi-t01-smoke is stopped with its volume retained. T-02 reserves port 3102; the earlier foundation Compose server is stopped.
 
 ## Next action
 
@@ -29,3 +29,7 @@ Assign T-02 from integrated verified commit 2f9e821, implement and integrate its
 ## Infrastructure and tracker reconciliation
 
 GitHub Actions is enabled, token permissions include workflow, and live main has no branch protection or repository rulesets. No pre-existing PR was found. These are prerequisites, not successful CI/review evidence. Runtime setup and connectivity are verified; T-01 integration checks passed as recorded above; no remote CI or independent full-feature review has yet run.
+
+## Domain contract checkpoint
+
+T-02 worker reports stable record/network/assessment/activity seams under src/modules and schema exports need, person, affiliation, company, evidence, capability, relationship, opportunity, assessment, assessmentEvidence and activity. Record mutations and generation lock the organization row. These are worker-stage contracts pending integrated verification, not completed ticket evidence. Planned parallel ownership after T-02 verification: T-03 schema/import/onboarding/manual record forms and T-04 network traversal/focused graph, with no shared schema changes expected for T-04.
