@@ -52,12 +52,18 @@ export async function saveActivity(headers: Headers, raw: unknown) {
         input.targetPersonId,
       );
     const existing = id
-      ? await tx.query.activity.findFirst({
-          where: and(
-            eq(activity.id, id),
-            eq(activity.organizationId, context.organization.id),
-          ),
-        })
+      ? (
+          await tx
+            .select()
+            .from(activity)
+            .where(
+              and(
+                eq(activity.id, id),
+                eq(activity.organizationId, context.organization.id),
+              ),
+            )
+            .for("update")
+        )[0]
       : null;
     if (id && !existing)
       throw new DomainError("NOT_FOUND", "Activity not found.", 404);

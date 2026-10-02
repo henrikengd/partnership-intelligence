@@ -258,7 +258,8 @@ export async function reviewFactors(
           ...latest.brief.claims.flatMap((c) => c.evidenceIds),
           ...(latest.brief.path?.edges.flatMap((e) => e.evidenceIds) ?? []),
         ],
-        inputRevision: record.inputRevision,
+        // Reviewing factor values does not refresh the factual brief snapshot.
+        inputRevision: latest.inputRevision,
       },
     );
     await tx

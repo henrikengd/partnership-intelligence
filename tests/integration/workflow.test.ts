@@ -290,6 +290,131 @@ describe("saved deterministic workflow against PostgreSQL", () => {
     );
     expect(current.record.reviewState).toBe("needs_review");
   });
+  it("keeps a changed factual snapshot stale after factor review until regeneration", async () => {
+    const f = await savedWorkflow();
+    const generated = await generateOpportunity(f.headers, {
+      needId: f.needId,
+      companyId: f.companyId,
+      partnershipType: "in_kind",
+    });
+    const original = await getOpportunityDetail(f.headers, generated.id);
+    await saveRecord(f.headers, "relationships", {
+      id: f.relationshipId,
+      personId: f.personId,
+      companyId: f.companyId,
+      kind: "previously_worked_at",
+      state: "ended",
+      startDate: "2024-01-01",
+      endDate: "2026-01-01",
+      evidenceId: f.employmentSourceId,
+    });
+    const reviewed = structuredClone(original.latest.factors);
+    for (const factor of Object.values(reviewed)) {
+      if (factor.origin === "deterministic") factor.origin = "human";
+    }
+    await reviewFactors(f.headers, generated.id, reviewed);
+    let current = await getOpportunityDetail(f.headers, generated.id);
+    expect(current.latest.brief).toEqual(original.latest.brief);
+    expect(current.latest.inputRevision).toBe(original.latest.inputRevision);
+    expect(current.record.inputRevision).toBeGreaterThan(
+      current.latest.inputRevision,
+    );
+    expect(current.record.reviewState).toBe("needs_review");
+    await generateOpportunity(f.headers, {
+      needId: f.needId,
+      companyId: f.companyId,
+      partnershipType: "in_kind",
+    });
+    current = await getOpportunityDetail(f.headers, generated.id);
+    expect(current.latest.inputRevision).toBe(current.record.inputRevision);
+    expect(current.brief.path).toBeNull();
+  });
+  it("cannot overwrite a completed action with a concurrent planned edit", async () => {
+    const f = await savedWorkflow();
+    const generated = await generateOpportunity(f.headers, {
+      needId: f.needId,
+      companyId: f.companyId,
+      partnershipType: "in_kind",
+    });
+    const detail = await getOpportunityDetail(f.headers, generated.id);
+    await editOpportunity(f.headers, generated.id, {
+      ...detail.brief,
+      ownerId: f.editor.id,
+    });
+    const event = await saveActivity(f.headers, {
+      opportunityId: generated.id,
+      kind: "introduction",
+      status: "planned",
+      targetPersonId: f.personId,
+      channel: "message",
+      description: "Request a permitted introduction.",
+    });
+    const barrier = await pool.connect();
+    let results:
+      | Promise<
+          PromiseSettledResult<Awaited<ReturnType<typeof saveActivity>>>[]
+        >
+      | undefined;
+    const waitForLock = async (query: string) => {
+      const deadline = Date.now() + 5000;
+      while (Date.now() < deadline) {
+        if ((await pool.query(query)).rows[0].ready) return;
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      throw new Error(
+        "The concurrent activity operation did not reach its database barrier.",
+      );
+    };
+    try {
+      await barrier.query("SELECT pg_advisory_lock(70411002)");
+      await pool.query(`CREATE FUNCTION pi_test_completion_barrier() RETURNS trigger
+        LANGUAGE plpgsql AS $$ BEGIN
+        IF OLD.status='planned' AND NEW.status='completed' THEN
+          PERFORM pg_advisory_xact_lock(70411002);
+        END IF;
+        RETURN NEW;
+        END $$`);
+      await pool.query(`CREATE TRIGGER pi_test_completion_barrier
+        BEFORE UPDATE ON activity FOR EACH ROW EXECUTE FUNCTION pi_test_completion_barrier()`);
+      const completion = saveActivity(f.headers, {
+        ...event,
+        status: "completed",
+      });
+      // Pause the first writer while it holds the row, before launching the edit.
+      await waitForLock(`SELECT EXISTS(SELECT 1 FROM pg_locks
+        WHERE NOT granted AND locktype='advisory' AND objid=70411002) AS ready`);
+      const plannedEdit = saveActivity(f.headers, {
+        ...event,
+        status: "planned",
+        description: "Edit an earlier plan.",
+      });
+      results = Promise.allSettled([completion, plannedEdit]);
+      await waitForLock(`SELECT EXISTS(SELECT 1 FROM pg_stat_activity
+        WHERE datname=current_database() AND wait_event_type='Lock'
+        AND wait_event<>'advisory' AND query LIKE '%"activity"%') AS ready`);
+      await barrier.query("SELECT pg_advisory_unlock(70411002)");
+      const [completed, edited] = await results;
+      expect(completed.status).toBe("fulfilled");
+      expect(edited).toMatchObject({
+        status: "rejected",
+        reason: { code: "COMPLETED_ACTIVITY" },
+      });
+      const [stored] = await db
+        .select()
+        .from(activity)
+        .where(eq(activity.id, event.id));
+      expect(stored.status).toBe("completed");
+      expect(stored.completedAt).not.toBeNull();
+    } finally {
+      await barrier.query("SELECT pg_advisory_unlock(70411002)");
+      if (results) await results;
+      await pool.query(
+        "DROP TRIGGER IF EXISTS pi_test_completion_barrier ON activity",
+      );
+      await pool.query("DROP FUNCTION IF EXISTS pi_test_completion_barrier()");
+      barrier.release();
+    }
+  });
   it("requires an active owner and preserves opportunity uniqueness on concurrent retries", async () => {
     const f = await savedWorkflow();
     const results = await Promise.all([
