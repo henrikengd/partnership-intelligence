@@ -2,14 +2,14 @@
 
 - Feature: `partnership-intelligence-mvp`.
 - Revision: `r1`, 2026-10-02.
-- Status: approved for issue publication.
+- Status: approved for implementation by the user's Deliver invocation on 2026-10-02.
 - Tracker: GitHub Issues in `henrikengd/partnership-intelligence`.
 - Parent specification: [#1](https://github.com/henrikengd/partnership-intelligence/issues/1). Published children: see [publication record](publication.md).
 - Scope: [scope.md](scope.md).
 
 ## Approval and source contract
 
-The user approved progression from the saved scope with "Nice. Lets make a github repo called partnership-intelligence under my user and prepare issues" on 2026-10-02. This explicitly authorizes repository creation and publication of the implementation plan. Under Prepare's explicit-publication exception, no second approval is required. It does not authorize application implementation, implementation branches, deployment, or merging.
+The user approved progression from the saved scope with "Nice. Lets make a github repo called partnership-intelligence under my user and prepare issues" on 2026-10-02. This explicitly authorizes repository creation and publication of the implementation plan. Under Prepare's explicit-publication exception, no second approval is required. That preparation request did not authorize implementation. The subsequent explicit Deliver invocation on 2026-10-02 selects this specification for implementation and authorizes its ordinary branch/worktree, ticket, push and unmerged-PR workflow. It does not authorize merging or deployment.
 
 The earlier scope, its three explicit user answers, [CONTEXT.md](../../../CONTEXT.md), and [architecture research](notes/architecture-research.md) are source material. This revision makes the earlier implementation proposals concrete. Official documentation establishes feasibility, not implemented behavior. No prototype was used. The repository contains planning documents and an initial remote README, with no application or existing test seams.
 
