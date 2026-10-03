@@ -75,7 +75,12 @@ export function BriefEditor({
       )}
       <div>
         <label htmlFor="op-owner">Team owner</label>
-        <select id="op-owner" name="ownerId" defaultValue={ownerId ?? ""}>
+        <select
+          key={ownerId ?? ""}
+          id="op-owner"
+          name="ownerId"
+          defaultValue={ownerId ?? ""}
+        >
           <option value="">Unassigned</option>
           {owners.map((o) => (
             <option key={o.id} value={o.id}>
@@ -91,6 +96,7 @@ export function BriefEditor({
         <div key={f.name}>
           <label htmlFor={`brief-${f.name}`}>{f.label}</label>
           <textarea
+            key={brief[f.name]}
             id={`brief-${f.name}`}
             name={f.name}
             defaultValue={brief[f.name]}
@@ -166,7 +172,7 @@ export function FactorsEditor({
           </p>
         )}
         {rubric.map((f) => (
-          <fieldset key={f.key}>
+          <fieldset key={`${f.key}:${JSON.stringify(factors[f.key])}`}>
             <legend>
               {f.label} · weight {f.weight}
             </legend>

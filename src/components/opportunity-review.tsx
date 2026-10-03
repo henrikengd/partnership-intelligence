@@ -130,6 +130,7 @@ export function OpportunityReviewForm({
         <textarea
           name="ask"
           id="ready-ask"
+          key={brief.ask}
           defaultValue={brief.ask}
           required
           minLength={12}
@@ -139,6 +140,7 @@ export function OpportunityReviewForm({
         <input
           name="contactRole"
           id="ready-role"
+          key={brief.contactRole}
           defaultValue={brief.contactRole}
           maxLength={500}
         />
@@ -155,6 +157,7 @@ export function OpportunityReviewForm({
         <textarea
           name="nextAction"
           id="ready-action"
+          key={brief.nextAction}
           defaultValue={brief.nextAction}
           required
           minLength={8}

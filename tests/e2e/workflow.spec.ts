@@ -1,6 +1,7 @@
 import { test, expect } from "./fixtures";
+import { generateOpportunity } from "../../src/modules/opportunities/service";
 import { resetTestDatabase } from "../helpers/database";
-import { editorContext } from "../helpers/workflow";
+import { editorContext, savedWorkflow } from "../helpers/workflow";
 test.beforeEach(async () => {
   await resetTestDatabase();
   await editorContext();
@@ -222,4 +223,103 @@ test("invited editor enters a machining opportunity and records a completed intr
     ).status(),
   ).toBe(401);
   await anonymous.close();
+});
+
+test("readiness refresh updates brief and factor fields before an unrelated edit can overwrite them", async ({
+  page,
+  baseURL,
+}) => {
+  await resetTestDatabase();
+  const f = await savedWorkflow();
+  const opportunity = await generateOpportunity(f.headers, {
+    needId: f.needId,
+    companyId: f.companyId,
+    partnershipType: "in_kind",
+  });
+  await page.context().addCookies(
+    f.headers
+      .get("cookie")!
+      .split("; ")
+      .map((cookie) => {
+        const split = cookie.indexOf("=");
+        return {
+          name: cookie.slice(0, split),
+          value: cookie.slice(split + 1),
+          url: baseURL!,
+        };
+      }),
+  );
+  await page.goto(`/opportunities/${opportunity.id}`);
+  await page
+    .getByText("Edit partnership brief and owner", { exact: true })
+    .click();
+  await page
+    .getByText("Inspect all score factors, evidence and editing controls", {
+      exact: true,
+    })
+    .click();
+  await page
+    .getByText("Review factor values and save a new assessment", {
+      exact: true,
+    })
+    .click();
+  await expect(page.locator("#fit-value")).toHaveValue("2");
+  await page.getByText("Review readiness and target", { exact: true }).click();
+  await page.locator("#ready-fit-value").selectOption("4");
+  await page
+    .locator("#ready-fit-rationale")
+    .fill("Reviewed drawings and capability support this precise batch.");
+  await page.locator("#ready-fit-evidence").selectOption(f.sourceId);
+  const ask = "Machine ten numbered fixtures from drawings before December.";
+  await page.locator("#ready-ask").fill(ask);
+  await page.locator("#ready-role").fill("Manufacturing manager");
+  await page
+    .locator("#ready-action")
+    .fill("Request a scoped technical meeting about ten fixtures.");
+  for (const name of [
+    "fitReviewed",
+    "askReviewed",
+    "targetReviewed",
+    "nextActionReviewed",
+  ])
+    await page.locator(`input[name=${name}]`).check();
+  await page
+    .getByRole("button", { name: "Save readiness review", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Reviewed action plan", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#brief-ask")).toHaveValue(ask);
+  await expect(page.locator("#fit-value")).toHaveValue("4");
+  await page.locator("#urgency-value").selectOption("3");
+  await page.locator("#urgency-origin").selectOption("organization");
+  await page.locator("#urgency-source").fill("Workshop calendar review");
+  await page
+    .locator("#urgency-rationale")
+    .fill("The team has a near-term fixture assembly date.");
+  await page
+    .getByRole("button", { name: "Save reviewed assessment", exact: true })
+    .click();
+  await expect(
+    page.getByText("Assessment version saved.", { exact: true }),
+  ).toBeVisible();
+  const reviewed = await (
+    await page.request.get(`/api/opportunities/${opportunity.id}`)
+  ).json();
+  expect(reviewed.latest.factors.fit.value).toBe(4);
+  await page.locator("#op-owner").selectOption(f.editor.id);
+  await page
+    .getByRole("button", { name: "Save brief and owner", exact: true })
+    .click();
+  await expect(
+    page.getByText(
+      "Brief and owner saved. Your edits are preserved during regeneration.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  const saved = await (
+    await page.request.get(`/api/opportunities/${opportunity.id}`)
+  ).json();
+  expect(saved.record.manualBrief.ask).toBe(ask);
+  expect(saved.record.ownerId).toBe(f.editor.id);
 });
