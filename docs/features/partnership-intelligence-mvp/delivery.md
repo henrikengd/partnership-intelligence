@@ -36,7 +36,7 @@ T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.
 
 ## Next action
 
-Assign T-08 privacy controls and T-09 demo/polish in isolated worktrees from 01c969f. Coordinate migration0008 release before T-09 metadata changes. Only root updates the integration branch and tracker. T-08/T-09 remain blocked until both tickets are integrated and verified. Preserve #2 pending final CI and the parent as open until PR merge.
+Integrate completed T-08 privacy services and actual settings composition, then T-09 demo/polish after verifying its adopted0008 metadata is not replayed. Verify both tickets and release T-10 operating/restore work. Only root updates the integration branch and tracker. T-08/T-09 remain blocked until both tickets are integrated and verified. Preserve #2 pending final CI and the parent as open until PR merge.
 
 ## Infrastructure and tracker reconciliation
 
@@ -114,3 +114,12 @@ T-06 and T-07 clean worker checkouts have been queued for managed archival after
 Worker schema ad19d6dda6fac46f97d2a5022bedfe2b39d38c15 was inspected and integrated as b44bb211ebf2a522c253bdd1c84253db2cfde4d5. Coordinator applied migration0008 to isolated pi_integration and passed typecheck. T-09 is released to adopt this exact metadata before generating its owned0009 demo sentinel. Schema handoff does not close T-08.
 
 Bounded early read-only privacy review is assigned to /root/test_runtime against emerging services in the T-08 worker checkout. It targets historical dependencies, signed impact, private-data races and coherent outcomes; unfinished UI is not a completed acceptance claim. Root is preparing final operating/restore verification from current code and primary Caddy/PostgreSQL documentation; T-10 implementation remains blocked pending integrated T-08/T-09 behavior.
+
+
+## Early privacy and demo review progress
+
+Read-only reviewer /root/test_runtime found three P2 issues in emerging T-08 sources atopad19d6d: event-only personal narratives were absent from impact selection; direct capability/incentive descriptions could retain aliases independently of supporting source text; and short names used unbounded substring matches that selected unrelated words. The worker reports repaired selection/boundaries and added regressions, still pending committed integration and verification. Root additionally requested removal of related scrubbed-record import mappings and current locked-organization fields in snapshot/purge decisions. Known no-assessment UI and concurrency seams were unfinished acceptance work, not a completed ticket claim.
+
+T-09 adopted privacy schema as e43a642 and owns0009_dark_zarek. Initial worker-only no-key seed/fixture checks report exact12/6/4/3/8 and valid warm/cold/history/refusal/decline/follow-up distinctions. Root identified a difference between the connection verified by the guard and the immutable application write pool; the worker now verifies pool.options.connectionString before connecting or mutating. Bounded source reviewer /root/test_runtime confirms the repair and no new material guard/dataset issue in changing sources. Real CLI/provision, browser and finalcommit evidence remain pending. Harbor Workshop Logistics replaces a recognizable real-company name in the fictional fixture.
+
+The original T-06 and T-07 worker attachments now confirm archived_worktree, with recoverable snapshots. Integration/T-08/T-09 are the active checkouts. The final operating/restore outline is prepared locally at /private/tmp/pi-t10-operating-outline.md and makes no completed-runtime claim.
