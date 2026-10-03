@@ -315,3 +315,63 @@ test("reload shows the chosen alternative route and named terminal contact, then
   ).toBeVisible();
   await expect(plan.getByText(/This plan is historical/)).toBeVisible();
 });
+
+test("exact regeneration refreshes the existing linked proposal after a decline and changed inputs", async ({
+  page,
+}) => {
+  const { transitionOpportunity } =
+    await import("../../src/modules/outreach/lifecycle");
+  const { getOpportunityDetail } =
+    await import("../../src/modules/opportunities/service");
+  const first = await startGenerationRun(f.headers, {
+    needId: f.needId,
+    companyIds: [f.companyId],
+    idempotencyKey: randomUUID(),
+  });
+  await transitionOpportunity(f.headers, first.results[0].opportunityId!, {
+    requestId: randomUUID(),
+    action: "transition",
+    fromState: "suggested",
+    toState: "declined",
+    reason: "Fictional earlier round unavailable",
+    source: "Fictional reply",
+    occurredDate: new Date().toISOString().slice(0, 10),
+  });
+  const second = await startGenerationRun(f.headers, {
+    needId: f.needId,
+    companyIds: [f.companyId],
+    idempotencyKey: randomUUID(),
+    allowNewAfterClosed: true,
+  });
+  const id = second.results[0].opportunityId!;
+  await saveRecord(f.headers, "needs", {
+    id: f.needId,
+    title: "Updated fixture batch",
+    description: "Updated drawings and delivery",
+    category: "manufacturing",
+    partnershipType: "in_kind",
+  });
+  await login(page);
+  await page.goto(`/opportunities/${id}`);
+  await expect(page.getByText(/Recorded inputs have changed/)).toBeVisible();
+  await page
+    .getByRole("button", {
+      name: "Regenerate from recorded inputs",
+      exact: true,
+    })
+    .click();
+  await expect
+    .poll(
+      async () => (await getOpportunityDetail(f.headers, id)).versions.length,
+    )
+    .toBe(2);
+  await page.reload();
+  await expect(page.getByText(/Recorded inputs have changed/)).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "a previous closed outcome", exact: true }),
+  ).toHaveAttribute("href", `/opportunities/${first.results[0].opportunityId}`);
+  await page.screenshot({
+    path: "/private/tmp/pi-review-linked-refresh.png",
+    fullPage: true,
+  });
+});

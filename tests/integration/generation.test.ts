@@ -560,3 +560,52 @@ describe("bounded generation and readiness", () => {
     ).rejects.toMatchObject({ status: 401 });
   });
 });
+
+it("refreshes the exact linked active proposal after an earlier decline without acknowledging a new creation", async () => {
+  const f = await savedWorkflow();
+  const first = await startGenerationRun(f.headers, selection(f));
+  const oldId = first.results[0].opportunityId!;
+  const { transitionOpportunity } =
+    await import("../../src/modules/outreach/lifecycle");
+  await transitionOpportunity(f.headers, oldId, {
+    requestId: randomUUID(),
+    action: "transition",
+    fromState: "suggested",
+    toState: "declined",
+    reason: "Fictional earlier timing unavailable",
+    source: "Fictional reply",
+    occurredDate: new Date().toISOString().slice(0, 10),
+  });
+  const second = await startGenerationRun(f.headers, {
+    ...selection(f),
+    allowNewAfterClosed: true,
+  });
+  const id = second.results[0].opportunityId!;
+  await saveRecord(f.headers, "needs", {
+    id: f.needId,
+    title: "Revised defined fixtures",
+    description: "Updated drawings",
+    category: "manufacturing",
+    partnershipType: "in_kind",
+  });
+  const stale = await getOpportunityDetail(f.headers, id);
+  expect(stale.latest.inputRevision).not.toBe(stale.record.inputRevision);
+  const request = { ...selection(f), refreshOpportunityId: id };
+  const refreshed = await startGenerationRun(f.headers, request);
+  expect(refreshed.results[0].opportunityId).toBe(id);
+  expect((await startGenerationRun(f.headers, request)).id).toBe(refreshed.id);
+  const detail = await getOpportunityDetail(f.headers, id);
+  expect(detail.record.previousOpportunityId).toBe(oldId);
+  expect(detail.latest.inputRevision).toBe(detail.record.inputRevision);
+  expect(detail.versions).toHaveLength(2);
+  expect(await db.select().from(opportunity)).toHaveLength(2);
+  await expect(
+    startGenerationRun(f.headers, {
+      ...selection(f),
+      refreshOpportunityId: oldId,
+    }),
+  ).rejects.toMatchObject({ code: "INVALID_REFRESH" });
+  await expect(
+    startGenerationRun(f.headers, selection(f)),
+  ).rejects.toMatchObject({ code: "CLOSED_HISTORY" });
+});

@@ -304,19 +304,6 @@ export async function startGenerationRun(headers: Headers, raw: unknown) {
       );
     for (const id of ids)
       await assertReference(tx, context.organization.id, "companies", id);
-    if (
-      !input.allowNewAfterClosed &&
-      previews.some(
-        (c) =>
-          ids.includes(c.companyId) &&
-          c.history.some((h) => ["declined", "archived"].includes(h.state)),
-      )
-    )
-      throw new DomainError(
-        "CLOSED_HISTORY",
-        "Review recorded outcomes and explicitly allow a new linked proposal.",
-        409,
-      );
     if (input.refreshOpportunityId) {
       const record = data.opportunities.find(
         (o) => o.id === input.refreshOpportunityId,
@@ -336,6 +323,20 @@ export async function startGenerationRun(headers: Headers, raw: unknown) {
           409,
         );
     }
+    if (
+      !input.refreshOpportunityId &&
+      !input.allowNewAfterClosed &&
+      previews.some(
+        (c) =>
+          ids.includes(c.companyId) &&
+          c.history.some((h) => ["declined", "archived"].includes(h.state)),
+      )
+    )
+      throw new DomainError(
+        "CLOSED_HISTORY",
+        "Review recorded outcomes and explicitly allow a new linked proposal.",
+        409,
+      );
     if (input.allowOngoingDiscussion && !input.companyIds)
       throw new DomainError(
         "EXPLICIT_SELECTION_REQUIRED",
