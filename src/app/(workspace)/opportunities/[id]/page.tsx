@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { requirePageActor } from "@/server/auth/page";
 import { DomainError } from "@/server/errors";
 import { getOpportunityDetail } from "@/modules/opportunities/service";
+import { AiDraftPanel } from "@/components/ai-draft-panel";
+import { getAiSettings } from "@/server/ai/service";
 import { LifecycleControls } from "@/components/lifecycle-controls";
 import { OutreachActivities } from "@/components/outreach-activities";
 import { getLifecycleDetail } from "@/modules/outreach/lifecycle";
@@ -35,6 +37,7 @@ export default async function OpportunityDetail({
   }
   const { record, latest, brief, data, score, versions, activities } = detail;
   const lifecycle = await getLifecycleDetail(requestHeaders, id);
+  const aiSettings = await getAiSettings(requestHeaders);
   const company = data.companies.find((c) => c.id === record.companyId)!;
   const need = data.needs.find((n) => n.id === record.needId)!;
   const stale = record.inputRevision !== latest.inputRevision;
@@ -64,8 +67,10 @@ export default async function OpportunityDetail({
         {stale
           ? "Recorded inputs have changed. Review this assessment or regenerate."
           : "Draft assessment. Review factual support, fit, ask, and the intended approach before acting."}{" "}
-        Scores prioritize work and are not success probabilities. AI is
-        disabled.
+        Scores prioritize work and are not success probabilities.{" "}
+        {aiSettings.enabled && aiSettings.credentialConfigured
+          ? "AI assistance is enabled. Review each outbound packet before generating a separate draft."
+          : "AI is disabled. Deterministic briefs and manual review remain available."}
       </p>
       {record.previousOpportunityId && (
         <p className="notice">
@@ -282,6 +287,7 @@ export default async function OpportunityDetail({
               evidence={data.evidence}
             />
           </section>
+          <AiDraftPanel opportunityId={id} />
           <section className="card">
             <h2>Assessment history</h2>
             {versions.map((v) => (

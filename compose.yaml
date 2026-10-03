@@ -21,6 +21,7 @@ services:
       BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:?Set a unique setup secret}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set the external application URL}
       ALLOW_INSECURE_HTTP: ${ALLOW_INSECURE_HTTP:-false}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     ports:
       - "127.0.0.1:${APP_PORT:-3000}:3000"
     depends_on:

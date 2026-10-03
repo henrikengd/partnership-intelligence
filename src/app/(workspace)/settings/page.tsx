@@ -1,3 +1,4 @@
+import { AiSettings } from "@/components/ai-settings";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { requirePageActor } from "@/server/auth/page";
@@ -61,6 +62,7 @@ export default async function Settings() {
             </p>
           </section>
         )}
+        <AiSettings />
         <section className="card">
           <h2>Your password</h2>
           <PasswordForm />
