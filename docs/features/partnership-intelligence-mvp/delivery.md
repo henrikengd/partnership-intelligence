@@ -8,13 +8,13 @@
 - Integration branch: codex/partnership-intelligence-mvp.
 - Integration worktree: /Users/henrik.noteless/.codex/worktrees/pi-integration/partnership-intelligence.
 - Initial integration commit: bf4953531a6e927a75b348fb075a0a4fd10fc22f.
-- PR: none. No merge or deployment authorized.
+- PR: https://github.com/henrikengd/partnership-intelligence/pull/12. Open as draft while current-commit CI is pending. No merge or deployment is authorized.
 
 The original planning workspace remains untouched and its local main is unborn. Managed worktrees use the fetched remote base. Deliver explicitly authorizes its prescribed implementation branches, ordinary feature push, ticket updates and PR; the preparation-stage notes about future authorization are historical.
 
 ## Current assignment and blockers
 
-Final reviewed application/helper source: `9a549e999121485a62cb9e88da2bfb1c1bb4d6e1`. Lint/types/build, unit38 and real PostgreSQL94 pass. Full Chromium20 passed at96d83eb; all five affected AI workflows pass again at9a549e9 after its only later code change. All eight material review findings are repaired and independently rechecked. T-02 through T-09 are closed. T-01/#2 and T-10/#11 await actual current-PR CI only. No PR exists at this pre-publication checkpoint; parent#1 remains open until merge.
+Final reviewed application/helper source: `9a549e999121485a62cb9e88da2bfb1c1bb4d6e1`. Lint/types/build, unit38 and real PostgreSQL94 pass. Full Chromium20 passed at96d83eb; all five affected AI workflows pass again at9a549e9 after its only later code change. All eight material review findings are repaired and independently rechecked. T-02 through T-09 are closed. T-01/#2 and T-10/#11 await actual current-PR CI only. PR #12 is open as draft; parent #1 remains open until merge.
 
 Fresh complete correctness, Standards and Spec reviews have no remaining material issue at9a549e9. Two nonblocking duplication judgments remain, separately recorded in notes/final-review.md. Unknown new occurrence dates are rejected; raw default AI need/source narrative stays local, uncertain named titles are omitted and explicit sanitized preview edits are sent exactly. Each new guard regression failed original source and passed its repair. An intermediate integrated browser run exposed a technical-acronym false positive; its repair and positive/negative control are checked.
 
@@ -46,7 +46,7 @@ T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.
 
 ## Next action
 
-Publish the single feature PR as draft, verify actual current-commit CI, then close #2/#11 with remote evidence and mark the PR ready. Check remote HEAD, merge conflicts, draft state and repository rules. Keep parent#1 open until merge; no merge or deployment is authorized.
+Verify actual current-commit CI on PR #12, then close #2/#11 with remote evidence and mark the PR ready. Check remote HEAD, merge conflicts, draft state and repository rules. Keep parent#1 open until merge; no merge or deployment is authorized.
 
 ## Infrastructure and tracker reconciliation
 
@@ -174,3 +174,8 @@ Current live npm audit changed on the unchanged lockfile after GHSA-vfj7-8cjw-p6
 ## Final application review and operating checkpoint
 
 Source9a549e9 integrates worker path/refresh/readiness repairs asfcd8908/4f621c4/dada212, coordinator AI/editor repairs as078c45c/979eff7, obsolete lifecycle cleanup asae900a2, actual-date/default-context repairs as70ef5fe/96d83eb and strict professional vocabulary as9a549e9. Runtime helper507b650 and final evidence77722a7 are integrated; later release/report metadata does not alter reviewed app source. Independently reviewed source and actual checks are complete. The single PR, current remote CI and final ticket closure will be recorded in the publication checkpoint and authoritative GitHub issue comments. Earlier checkpoint results remain historical.
+
+
+## PR publication and CI bootstrap
+
+PR #12 is the single feature PR, attached to this Codex chat. Its initial head was `2d312a3465c8c53e762fd7f6c8bf6202be7f3017`; it remains unmerged against the unchanged approved main base. GitHub Actions is enabled, but live workflow and run inventories were empty after PR creation despite the workflow file being present on the feature branch. The workflow now also runs on `codex/**` pushes so the first unmerged workflow can run on a feature push. This changes no application or runtime-helper source. Actual remote results remain pending; an enabled trigger is not successful CI evidence.
