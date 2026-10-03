@@ -366,3 +366,49 @@ it("does not extend a generic target span over a following invented person name"
       "PRIVATE_DRAFT",
     );
 });
+
+it("rejects unknown named people anywhere in actionable prose, without relying on one leading verb", () => {
+  const noRoute = { ...packet, routes: [] };
+  const cold = {
+    ...draft,
+    contact: { personRef: null, role: "Manufacturing manager" },
+    routeRef: null,
+  };
+  for (const nextAction of [
+    "John Smith is the manufacturing manager to approach.",
+    "Reach out to John Smith to arrange a technical meeting.",
+    "Speak with Åsmund Phantom about the drawings.",
+    "Ask for an introduction through Maria.",
+    "Reach out to Maria about the drawings.",
+    "Contact the manager, John Smith, after checking capacity.",
+  ])
+    expect(() => validateDraft({ ...cold, nextAction }, noRoute, [])).toThrow(
+      "PRIVATE_DRAFT",
+    );
+  for (const field of ["ask", "approach", "outreachText"] as const)
+    expect(() =>
+      validateDraft(
+        { ...cold, [field]: "John Smith can arrange a technical meeting." },
+        noRoute,
+        [],
+      ),
+    ).toThrow("PRIVATE_DRAFT");
+  const supplied = {
+    ...noRoute,
+    company: { name: "Cedar Manufacturing" },
+    allowedContactRoles: ["Manufacturing Manager", "CEO"],
+  };
+  expect(() =>
+    validateDraft(
+      {
+        ...cold,
+        contact: { personRef: null, role: "Manufacturing Manager" },
+        nextAction:
+          "Contact Manufacturing Manager to verify CNC capacity at Cedar Manufacturing.",
+        approach: "Ask the CEO whether a scoped technical meeting is feasible.",
+      },
+      supplied,
+      [],
+    ),
+  ).not.toThrow();
+});

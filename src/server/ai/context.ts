@@ -252,23 +252,26 @@ export function validateDraft(
         /(?:\b\d+(?:\.\d+)?%\s+(?:chance|probability|likelihood)\s+of\s+(?:success|partnership)|\b(?:success\s+(?:chance|probability|likelihood)|(?:relationship|fit|priority|evidence|urgency|feasibility|overall)\s+score)\s*(?:is|:|=)?\s*\d+)/i.test(
           s,
         ) ||
-        hasNamedContact(s, packet.allowedContactRoles),
+        hasNamedContact(s, [
+          ...packet.allowedContactRoles,
+          packet.company.name,
+        ]) ||
+        hasUnlistedProperName(s, packet),
     )
   )
     throw new AiError("PRIVATE_DRAFT");
   return d;
 }
 
-function hasNamedContact(value: string, allowedRoles: string[]) {
+function hasNamedContact(value: string, allowedTargets: string[]) {
   const targets =
     /\b(?:[Cc]ontact|[Aa]sk|[Ee]mail|[Ii]ntroduce|[Dd]ear|[Hh]i|[Hh]ello|[Mm]anager|[Nn]amed)\s+(\p{Lu}[\p{L}'’-]*(?:\s+\p{Lu}[\p{L}'’-]*)?)(?!\p{L})/gu;
   for (const match of value.matchAll(targets)) {
     const targetStart = match.index! + match[0].length - match[1].length;
     const tail = value.slice(targetStart);
-    // Only this exact target span can be a generic role. A role elsewhere cannot waive a name.
-    const genericTarget = allowedRoles.some(
+    // Only an exact supplied target label is permitted. A role elsewhere cannot waive a name.
+    const genericTarget = allowedTargets.some(
       (role) =>
-        isGenericRole(role) &&
         tail.startsWith(role) &&
         match[1].length <= role.length &&
         !/^[\p{L}\p{N}]/u.test(tail.slice(role.length)) &&
@@ -277,4 +280,38 @@ function hasNamedContact(value: string, allowedRoles: string[]) {
     if (!genericTarget) return true;
   }
   return false;
+}
+
+// This conservative prose guard is not entity recognition or factual verification.
+// Names belong in pseudonym slots. Preserve only exact supplied company/role/title labels.
+function hasUnlistedProperName(value: string, packet: AiPacket) {
+  let prose = value;
+  const labels = [
+    packet.company.name,
+    packet.need.title,
+    ...packet.allowedContactRoles,
+  ]
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+  for (const label of labels)
+    prose = prose.replace(
+      new RegExp(
+        `(?<![\\p{L}\\p{N}_])${escape(label)}(?![\\p{L}\\p{N}_])`,
+        "giu",
+      ),
+      "[supplied label]",
+    );
+  // Unknown capitalized full names are prohibited even without an action verb.
+  if (
+    /(?<![\p{L}\p{N}_])\p{Lu}[\p{L}'’-]*\s+\p{Lu}[\p{L}'’-]*(?!\p{L})/u.test(
+      prose,
+    )
+  )
+    return true;
+  // Also reject a single named person in common contact/introduction constructions.
+  const contactPhrases =
+    /\b(?:reach\s+out\s+to|speak\s+(?:with|to)|talk\s+to|meet\s+with|approach|connect\s+with|introduction\s+(?:from|through|via)|through|via)\s+([\p{L}'’-]+)/giu;
+  return [...prose.matchAll(contactPhrases)].some((match) =>
+    /^\p{Lu}/u.test(match[1]),
+  );
 }
