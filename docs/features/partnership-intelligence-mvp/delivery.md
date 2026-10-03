@@ -8,13 +8,13 @@
 - Integration branch: codex/partnership-intelligence-mvp.
 - Integration worktree: /Users/henrik.noteless/.codex/worktrees/pi-integration/partnership-intelligence.
 - Initial integration commit: bf4953531a6e927a75b348fb075a0a4fd10fc22f.
-- PR: https://github.com/henrikengd/partnership-intelligence/pull/12. Open as draft while current-commit CI is pending. No merge or deployment is authorized.
+- PR: https://github.com/henrikengd/partnership-intelligence/pull/12. Open and ready for review, unmerged. No merge or deployment is authorized.
 
 The original planning files and empty index remain untouched. Its main ref now resolves to the shared approved base, so Git shows the planning files as untracked and the base files as staged deletions; no cleanup or checkout was performed there. Managed worktrees use the fetched remote base. Deliver explicitly authorizes its prescribed implementation branches, ordinary feature push, ticket updates and PR; the preparation-stage notes about future authorization are historical.
 
 ## Current assignment and blockers
 
-Final reviewed application/helper source: `9a549e999121485a62cb9e88da2bfb1c1bb4d6e1`. Lint/types/build, unit38 and real PostgreSQL94 pass. Full Chromium20 passed at96d83eb; all five affected AI workflows pass again at9a549e9 after its only later code change. All eight material review findings are repaired and independently rechecked. T-02 through T-09 are closed. T-01/#2 and T-10/#11 await actual current-PR CI only. PR #12 is open as draft; parent #1 remains open until merge.
+Final reviewed application/helper source is `9a549e999121485a62cb9e88da2bfb1c1bb4d6e1`. The portable browser harness is committed as `1fd17a00239bdd428b0bf21699104e3716ec7740`. Coordinator lint, types, production build, 38 unit tests, 94 real PostgreSQL tests and all 20 Chromium workflows pass. Both GitHub PR and push CI pass at `1fd17a0` with the same complete checks on Linux. All eight material review findings are repaired and independently rechecked. All ten implementation tickets, #2 through #11, are closed on the feature branch. PR #12 is open and ready for review; parent #1 remains open until merge. Final publication metadata does not change application, helper or test behavior; its current-commit CI is verified again before handoff.
 
 Fresh complete correctness, Standards and Spec reviews have no remaining material issue at9a549e9. Two nonblocking duplication judgments remain, separately recorded in notes/final-review.md. Unknown new occurrence dates are rejected; raw default AI need/source narrative stays local, uncertain named titles are omitted and explicit sanitized preview edits are sent exactly. Each new guard regression failed original source and passed its repair. An intermediate integrated browser run exposed a technical-acronym false positive; its repair and positive/negative control are checked.
 
@@ -46,9 +46,9 @@ T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.
 
 ## Next action
 
-Verify actual current-commit CI on PR #12, then close #2/#11 with remote evidence and mark the PR ready. Check remote HEAD, merge conflicts, draft state and repository rules. Keep parent#1 open until merge; no merge or deployment is authorized.
+Review PR #12. The approved implementation is complete and has no remaining external blocker. After this publication-record push, verify the latest remote HEAD and its CI before handoff. Keep parent #1 open until merge; no merge or deployment is authorized.
 
-## Infrastructure and tracker reconciliation
+## Historical infrastructure and tracker reconciliation
 
 GitHub Actions is enabled, token permissions include workflow, and live main has no branch protection or repository rulesets. No pre-existing PR was found. These are prerequisites, not successful CI/review evidence. Runtime setup and connectivity are verified; T-01 integration checks passed as recorded above; no remote CI or independent full-feature review has yet run.
 
@@ -187,3 +187,14 @@ The first push and PR runs at `f0a43c7bc7b1973e690b651dca2428f72ef2e309` registe
 
 
 The portable-output repair passes coordinator lint/type checking and all 20 actual Chromium workflows locally. Log: `/private/tmp/pi-ci-portable-local-e2e.log`. Reviewer `/root/test_runtime` inspected the helper and every changed E2E spec, found no material issue and confirmed that assertions are unchanged and no screenshot is uploaded. The final application's full browser coverage now also binds the unchanged `9a549e9` source with this repaired test harness. Remote checks still must pass on the repair commit.
+
+
+## Verified publication checkpoint
+
+On 2026-10-03, PR #12 was verified open, non-draft and conflict-free at `1fd17a00239bdd428b0bf21699104e3716ec7740`, against unchanged base `bf4953531a6e927a75b348fb075a0a4fd10fc22f`. [PR CI run 37089427740](https://github.com/henrikengd/partnership-intelligence/actions/runs/37089427740) and [push run 37089424611](https://github.com/henrikengd/partnership-intelligence/actions/runs/37089424611) both succeeded. Logs confirm 38 unit tests, 94 PostgreSQL tests and all 20 Chromium tests; lint, types, migrations, demo test provisioning and build succeeded. The failed first run is historical, repaired and superseded, with no waived assertion or check.
+
+Tickets #2 and #11 now have criterion evidence and are confirmed closed, completing all ten child tickets. Parent #1 remains open and is linked for closure only on merge. GitHub reports no branch protection or repository rulesets, no outstanding approval requirement, no auto-merge and no merge conflict. Agent review is independent source review, not a fabricated GitHub author approval. The PR is attached to the Codex chat.
+
+All ten worker worktrees and both repair worktrees are confirmed archived. The integration checkout remains attached and the original planning files/index are preserved. All local release containers and the three task-owned test databases are stopped; their volumes and private fictional verification artifacts remain outside Git. No real deployment, paid-provider compatibility, public TLS/DNS operation or merge is claimed.
+
+This final publication record changes documentation only. Its follow-up CI and remote readiness are verified against the latest PR head before handoff, with the final result recorded in the PR's live checks and publication comment. [Current PR checks](https://github.com/henrikengd/partnership-intelligence/pull/12/checks) are authoritative for any later commit.

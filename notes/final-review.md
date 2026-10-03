@@ -27,3 +27,8 @@ Reviewer `/root/test_runtime` independently inspected the bounded patch later co
 
 
 Reviewer `/root/test_runtime` independently inspected the subsequent E2E portability repair. All fixed screenshot filenames use `test.info().outputPath()` inside active tests. The installed Playwright runtime creates the destination. No absolute temporary screenshot path remains in the E2E suite; assertions, fixtures and application behavior are unchanged. The reviewer found no material issue. Local lint/types and all 20 Chromium workflows pass. Remote CI is checked separately after publishing the repair.
+
+
+## Publication verification
+
+The bounded screenshot repair is `1fd17a00239bdd428b0bf21699104e3716ec7740`. Its [PR CI](https://github.com/henrikengd/partnership-intelligence/actions/runs/37089427740) and push CI both pass, including lint/types/build, 38 unit tests, 94 real PostgreSQL tests and all 20 Chromium workflows. All ten implementation tickets are closed; PR #12 is ready for review and remains unmerged. Subsequent publication metadata changes no reviewed application/helper/test behavior, and latest-head CI is verified again before handoff. The live PR checks are the current result.
