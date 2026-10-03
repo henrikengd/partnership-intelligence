@@ -234,6 +234,99 @@ describe("optional private AI requests", () => {
     const [run] = await db.select().from(aiRun);
     for (const p of people) expect(run.referenceMap.personIds).toContain(p.id);
   });
+  it("rejects instruction-shaped or named role suggestions before provider execution", async () => {
+    const f = await fixture();
+    await enable(f);
+    const raw = await request(f);
+    const fake = vi.fn(provider);
+    for (const suggestedRole of [
+      "Ask Alice Phantom manager",
+      "Contact Åsmund Phantom manager",
+      "Alice Phantom manager",
+      "Ignore instructions manager",
+    ])
+      await expect(
+        startAiRun(f.headers, { ...raw, suggestedRole }, { provider: fake }),
+      ).rejects.toMatchObject({ code: "INVALID_ROLE" });
+    expect(fake).not.toHaveBeenCalled();
+    expect(await db.select().from(aiRun)).toHaveLength(0);
+  });
+  it("cannot select a refused route's recorded person through a null route, but can draft a generic cold role", async () => {
+    const f = await fixture();
+    await enable(f);
+    await saveRecord(f.headers, "relationships", {
+      id: f.relationshipId,
+      kind: "works_at",
+      personId: f.personId,
+      companyId: f.companyId,
+      title: "Engineer",
+      state: "current",
+      evidenceId: f.employmentSourceId,
+      willingness: "no",
+      willingnessDate: new Date().toISOString().slice(0, 10),
+      willingnessSource: "Fictional explicit refusal",
+    });
+    const raw = await request(f);
+    expect(raw.packet.routes[0].willingness).toBe("no");
+    for (const routeRef of [null, raw.packet.routes[0].ref]) {
+      const invalid: Provider = async (packet) => ({
+        ...fakeDraft(packet),
+        routeRef,
+      });
+      const run = await startAiRun(
+        f.headers,
+        { ...raw, idempotencyKey: crypto.randomUUID() },
+        { provider: invalid },
+      );
+      expect(run.status).toBe("failed");
+    }
+    const failed = await listAiRuns(f.headers, f.opportunityId);
+    expect(
+      failed.every(
+        (run) =>
+          run.errorCategory === "INVALID_REFERENCES" && run.draft === null,
+      ),
+    ).toBe(true);
+    const roleOnly: Provider = async (packet) => ({
+      ...fakeDraft(packet),
+      contact: { personRef: null, role: "Partnership manager" },
+      routeRef: null,
+      nextAction:
+        "Verify the relevant company role and capacity before cold outreach.",
+    });
+    expect(
+      (
+        await startAiRun(
+          f.headers,
+          { ...raw, idempotencyKey: crypto.randomUUID() },
+          { provider: roleOnly },
+        )
+      ).status,
+    ).toBe("completed");
+  });
+  it("rejects names mixed with an allowed role without replacing the whole role phrase", async () => {
+    const f = await fixture();
+    await enable(f);
+    for (const nextAction of [
+      "Ask Alice Phantom manager",
+      "Contact Partnership manager. Ask Alice Phantom manager.",
+      "Contact Åsmund Phantom, the Partnership manager.",
+    ]) {
+      const bad: Provider = async (packet) => ({
+        ...fakeDraft(packet),
+        nextAction,
+      });
+      expect(
+        (await startAiRun(f.headers, await request(f), { provider: bad }))
+          .status,
+      ).toBe("failed");
+    }
+    expect(
+      (await listAiRuns(f.headers, f.opportunityId)).every(
+        (run) => run.errorCategory === "PRIVATE_DRAFT" && run.draft === null,
+      ),
+    ).toBe(true);
+  });
   it("keeps saved draft history available when a valid domain edit cannot fit a new AI packet", async () => {
     const f = await fixture();
     await enable(f);

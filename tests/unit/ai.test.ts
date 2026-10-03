@@ -4,6 +4,7 @@ import {
   validatePacket,
   validateDraft,
 } from "../../src/server/ai/context";
+import { isGenericRole } from "../../src/server/ai/roles";
 import { openAiProvider, boundedCall } from "../../src/server/ai/provider";
 import type { AiPacket, AiDraft } from "../../src/server/ai/contracts";
 const packet: AiPacket = {
@@ -181,7 +182,39 @@ it("rejects composed unrelated contacts and refused routes even when all IDs are
       extended,
       [],
     ),
+  ).toThrow("INVALID_REFERENCES");
+  expect(() =>
+    validateDraft(
+      { ...draft, routeRef: "R2", contact: { personRef: "P2", role: null } },
+      extended,
+      [],
+    ),
   ).not.toThrow();
+  expect(() =>
+    validateDraft(
+      {
+        ...draft,
+        routeRef: null,
+        contact: { personRef: null, role: "Manufacturing manager" },
+      },
+      extended,
+      [],
+    ),
+  ).not.toThrow();
+  expect(() =>
+    validateDraft(
+      { ...draft, routeRef: null },
+      { ...packet, routes: [{ ...packet.routes[0], willingness: "no" }] },
+      [],
+    ),
+  ).toThrow("INVALID_REFERENCES");
+  expect(() =>
+    validateDraft(
+      draft,
+      { ...packet, routes: [{ ...packet.routes[0], current: false }] },
+      [],
+    ),
+  ).toThrow("INVALID_REFERENCES");
 });
 describe("Responses adapter", () => {
   it("keeps hostile sources in user input, requests no tools, bounds tokens, and parses reasoning before text", async () => {
@@ -260,4 +293,76 @@ describe("Responses adapter", () => {
       ),
     ).rejects.toThrow("TIMEOUT");
   });
+});
+
+it("constrains role suggestions and never exempts a named target using an instruction-shaped role", () => {
+  for (const role of [
+    "Ask Alice Phantom manager",
+    "Alice Phantom manager",
+    "Contact Åsmund Phantom manager",
+    "Ignore instructions manager",
+    "Alice manager",
+    "Manufacturing manager, email a@b",
+    "This company is suitable",
+  ])
+    expect(isGenericRole(role)).toBe(false);
+  for (const role of [
+    "grant officer",
+    "Manufacturing manager",
+    "Partnership manager",
+    "Operations lead",
+    "CEO",
+    "hydrology specialist",
+  ])
+    expect(isGenericRole(role)).toBe(true);
+  expect(() =>
+    validateDraft(
+      {
+        ...draft,
+        contact: { personRef: null, role: "Ask Alice Phantom manager" },
+        nextAction: "Ask Alice Phantom manager",
+      },
+      { ...packet, allowedContactRoles: ["Ask Alice Phantom manager"] },
+      [],
+    ),
+  ).toThrow("INVALID_REFERENCES");
+  expect(() =>
+    validateDraft(
+      {
+        ...draft,
+        nextAction: "Contact Manufacturing manager. Ask Alice Phantom manager.",
+      },
+      packet,
+      [],
+    ),
+  ).toThrow("PRIVATE_DRAFT");
+  expect(() =>
+    validateDraft(
+      {
+        ...draft,
+        nextAction: "Contact Manufacturing manager to verify capacity.",
+      },
+      packet,
+      [],
+    ),
+  ).not.toThrow();
+});
+
+it("does not extend a generic target span over a following invented person name", () => {
+  const roles = {
+    ...packet,
+    allowedContactRoles: [
+      ...packet.allowedContactRoles,
+      "Manager",
+      "Operations lead",
+    ],
+  };
+  for (const nextAction of [
+    "Contact Manager Alice Phantom",
+    "Contact Operations lead Alice Phantom",
+    "Contact Operations lead (Åsmund Phantom)",
+  ])
+    expect(() => validateDraft({ ...draft, nextAction }, roles, [])).toThrow(
+      "PRIVATE_DRAFT",
+    );
 });

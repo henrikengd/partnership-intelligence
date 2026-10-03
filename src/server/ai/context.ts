@@ -7,6 +7,7 @@ import {
 } from "./contracts";
 import type { WorkspaceData } from "../../modules/records/service";
 import { DomainError } from "../errors";
+import { isGenericRole } from "./roles";
 import type { RelationshipPath } from "../../modules/opportunities/contracts";
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export function redact(
@@ -62,10 +63,7 @@ export function buildPacket(
     );
   if (
     suggestedRole &&
-    (!/\b(?:officer|manager|director|coordinator|lead|engineer|specialist|advisor|chair|president|recruiter|owner|head|partner)\b/i.test(
-      suggestedRole,
-    ) ||
-      clean(suggestedRole) !== suggestedRole)
+    (!isGenericRole(suggestedRole) || clean(suggestedRole) !== suggestedRole)
   )
     throw new DomainError(
       "INVALID_ROLE",
@@ -126,7 +124,7 @@ export function buildPacket(
           ...data.relationships
             .filter((r) => r.companyId === company.id)
             .map((r) => r.title ?? ""),
-        ].filter((role) => role.trim() && clean(role) === role),
+        ].filter((role) => isGenericRole(role) && clean(role) === role),
       ),
     ].slice(0, 12),
     userInstructions:
@@ -223,8 +221,8 @@ export function validateDraft(
         c.evidenceRefs.some((r) => !packet.evidence.some((e) => e.ref === r)),
     ) ||
     (d.routeRef && !packet.routes.some((r) => r.ref === d.routeRef)) ||
-    (d.contact.personRef &&
-      !packet.routes.some((r) => r.people.includes(d.contact.personRef!))) ||
+    (d.contact.personRef && !d.routeRef) ||
+    packet.allowedContactRoles.some((role) => !isGenericRole(role)) ||
     (d.contact.role && !packet.allowedContactRoles.includes(d.contact.role))
   )
     throw new AiError("INVALID_REFERENCES");
@@ -254,14 +252,29 @@ export function validateDraft(
         /(?:\b\d+(?:\.\d+)?%\s+(?:chance|probability|likelihood)\s+of\s+(?:success|partnership)|\b(?:success\s+(?:chance|probability|likelihood)|(?:relationship|fit|priority|evidence|urgency|feasibility|overall)\s+score)\s*(?:is|:|=)?\s*\d+)/i.test(
           s,
         ) ||
-        /\b(?:[Cc]ontact|[Aa]sk|[Ee]mail|[Ii]ntroduce|[Dd]ear|[Hh]i|[Hh]ello|[Mm]anager|[Nn]amed)\s+(?:\p{Lu}[\p{L}'’-]+\s+\p{Lu}[\p{L}'’-]+|\p{Lu}[\p{L}'’-]+)(?!\p{L})/u.test(
-          packet.allowedContactRoles.reduce(
-            (value, role) => value.replaceAll(role, "[role]"),
-            s,
-          ),
-        ),
+        hasNamedContact(s, packet.allowedContactRoles),
     )
   )
     throw new AiError("PRIVATE_DRAFT");
   return d;
+}
+
+function hasNamedContact(value: string, allowedRoles: string[]) {
+  const targets =
+    /\b(?:[Cc]ontact|[Aa]sk|[Ee]mail|[Ii]ntroduce|[Dd]ear|[Hh]i|[Hh]ello|[Mm]anager|[Nn]amed)\s+(\p{Lu}[\p{L}'’-]*(?:\s+\p{Lu}[\p{L}'’-]*)?)(?!\p{L})/gu;
+  for (const match of value.matchAll(targets)) {
+    const targetStart = match.index! + match[0].length - match[1].length;
+    const tail = value.slice(targetStart);
+    // Only this exact target span can be a generic role. A role elsewhere cannot waive a name.
+    const genericTarget = allowedRoles.some(
+      (role) =>
+        isGenericRole(role) &&
+        tail.startsWith(role) &&
+        match[1].length <= role.length &&
+        !/^[\p{L}\p{N}]/u.test(tail.slice(role.length)) &&
+        !/^\s*(?:[-,:;(]\s*)?\p{Lu}/u.test(tail.slice(role.length)),
+    );
+    if (!genericTarget) return true;
+  }
+  return false;
 }
