@@ -15,6 +15,7 @@ import {
   user,
   partnership,
   previousOutreach,
+  companyNeedIncentive,
 } from "../../server/db";
 import { requireActor } from "../../server/auth/access";
 import { DomainError } from "../../server/errors";
@@ -94,7 +95,12 @@ export async function readWorkspaceData(
     .select()
     .from(previousOutreach)
     .where(eq(previousOutreach.organizationId, org.id));
+  const companyNeedIncentives = await connection
+    .select()
+    .from(companyNeedIncentive)
+    .where(eq(companyNeedIncentive.organizationId, org.id));
   return {
+    companyNeedIncentives,
     partnerships,
     previousOutreach: previousOutreaches,
     actor,

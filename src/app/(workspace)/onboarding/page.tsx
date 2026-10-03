@@ -159,9 +159,10 @@ export default async function Page() {
         <section className="card">
           <h3>First-opportunity readiness</h3>
           <p>
-            Supported pairs below have a matching capability and a supplied or
-            reviewed source. Supplied claims still need human review. Unknown
-            access, willingness and feasibility remain explicit in the brief.
+            Supported pairs below have a matching capability or a need-specific
+            company incentive linked to a current supplied or reviewed source.
+            Supplied claims still need human review. Unknown access, willingness
+            and feasibility remain explicit in the brief.
           </p>
           {ready.tasks.map((t) => (
             <p key={t} className="notice">

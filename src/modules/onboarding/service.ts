@@ -1,3 +1,4 @@
+import { candidatePreviews } from "../opportunities/candidates";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, onboarding } from "../../server/db";
@@ -77,29 +78,14 @@ export async function saveOnboarding(headers: Headers, raw: unknown) {
 export function readiness(data: WorkspaceData) {
   const needs = data.needs.filter((n) => n.active);
   const supported = needs.flatMap((n) =>
-    data.companies.flatMap((c) => {
-      const caps = data.capabilities.filter(
-        (cap) =>
-          cap.companyId === c.id &&
-          cap.category.toLowerCase() === n.category.toLowerCase() &&
-          data.evidence.some(
-            (e) =>
-              e.id === cap.evidenceId &&
-              ["supplied", "reviewed"].includes(e.reviewState) &&
-              e.observedDate <= new Date().toISOString().slice(0, 10),
-          ),
-      );
-      return caps.length
-        ? [
-            {
-              needId: n.id,
-              companyId: c.id,
-              label: `${n.title} → ${c.name}`,
-              partnershipType: n.partnershipType,
-            },
-          ]
-        : [];
-    }),
+    candidatePreviews(data, n.id, data.companyNeedIncentives)
+      .filter((c) => c.eligible)
+      .map((c) => ({
+        needId: n.id,
+        companyId: c.companyId,
+        label: `${n.title} → ${c.companyName}`,
+        partnershipType: n.partnershipType,
+      })),
   );
   const tasks: string[] = [];
   if (!needs.length) tasks.push("Add an active organizational need.");
@@ -107,7 +93,7 @@ export function readiness(data: WorkspaceData) {
     tasks.push("Add a candidate company from your existing records.");
   if (needs.length && data.companies.length && !supported.length)
     tasks.push(
-      "Add a company capability in a matching need category, linked to a supplied source or reviewed observation. Resolve disputed sources first.",
+      "Add a matching company capability or a need-specific company incentive linked to a supplied source or reviewed observation with current dates. Resolve disputed and future-dated sources first.",
     );
   return { supported, tasks };
 }
