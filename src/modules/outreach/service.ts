@@ -102,10 +102,18 @@ export async function saveActivity(headers: Headers, raw: unknown) {
         409,
       );
     const today = localCalendarDay(context.organization.timezone);
+    if (
+      input.status === "completed" &&
+      existing?.status !== "completed" &&
+      !input.occurredDate
+    )
+      throw new DomainError(
+        "ACTIVITY_DATE_REQUIRED",
+        "Supply the actual communication date before recording completion.",
+      );
     const occurredDate =
       input.status === "completed"
-        ? (input.occurredDate ??
-          (existing?.status === "completed" ? existing.occurredDate : today))
+        ? (input.occurredDate ?? existing?.occurredDate ?? null)
         : null;
     if (input.status === "planned" && input.occurredDate)
       throw new DomainError(

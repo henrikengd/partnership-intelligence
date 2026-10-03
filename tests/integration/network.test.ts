@@ -305,6 +305,7 @@ describe("recorded network paths", () => {
       opportunityId: op.id,
       kind: "outreach",
       status: "completed",
+      occurredDate: "2020-01-01",
       targetRole: "Operations lead",
       channel: "email",
       description: "Fictional completed outreach.",

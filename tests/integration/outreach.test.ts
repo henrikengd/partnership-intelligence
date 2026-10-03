@@ -133,11 +133,39 @@ describe("owned outreach lifecycle and outcomes", () => {
       }),
     ).rejects.toMatchObject({ code: "FUTURE_ACTIVITY" });
   });
+  it("refuses missing and null actual dates for new completions without changing planned facts", async () => {
+    const f = await fixture();
+    const planned = await saveActivity(f.headers, action(f));
+    for (const occurredDate of [undefined, null]) {
+      await expect(
+        saveActivity(f.headers, {
+          ...action(f),
+          status: "completed",
+          occurredDate,
+        }),
+      ).rejects.toMatchObject({ code: "ACTIVITY_DATE_REQUIRED" });
+      await expect(
+        saveActivity(f.headers, {
+          ...action(f),
+          id: planned.id,
+          status: "completed",
+          occurredDate,
+        }),
+      ).rejects.toMatchObject({ code: "ACTIVITY_DATE_REQUIRED" });
+    }
+    const stored = await db.query.activity.findFirst({
+      where: eq(activity.id, planned.id),
+    });
+    expect(stored!.status).toBe("planned");
+    expect(stored!.occurredDate).toBeNull();
+    expect(stored!.completedAt).toBeNull();
+  });
   it("keeps legacy completed occurrence unknown while editing only its follow-up", async () => {
     const f = await fixture();
     const a = await saveActivity(f.headers, {
       ...action(f),
       status: "completed",
+      occurredDate: "2020-01-01",
     });
     await db
       .update(activity)

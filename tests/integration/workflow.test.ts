@@ -262,7 +262,11 @@ describe("saved deterministic workflow against PostgreSQL", () => {
       followUpDate: "2026-01-01",
     });
     expect(event.completedAt).toBeNull();
-    event = await saveActivity(f.headers, { ...event, status: "completed" });
+    event = await saveActivity(f.headers, {
+      ...event,
+      status: "completed",
+      occurredDate: "2020-01-01",
+    });
     expect(event.completedAt).not.toBeNull();
     await expect(
       saveActivity(f.headers, { ...event, status: "planned" }),
@@ -379,6 +383,7 @@ describe("saved deterministic workflow against PostgreSQL", () => {
       const completion = saveActivity(f.headers, {
         ...event,
         status: "completed",
+        occurredDate: "2020-01-01",
       });
       // Pause completion while it holds organization/opportunity/activity locks.
       // The competing edit must wait at the first lock in that order.
