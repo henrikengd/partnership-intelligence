@@ -14,7 +14,7 @@ The original planning workspace remains untouched and its local main is unborn. 
 
 ## Current assignment and blockers
 
-Current checked application: `7f6dbb460ca52b35f3ff2de7755a58cba045af0e`. T-02 through T-08 are integrated, verified and closed. T-09 is finishing demo/accessibility verification in its assigned worktree. T-10 remains blocked until T-09 integration is verified. T-01 remains open only for actual remote CI. No PR exists yet.
+Current checked application: `7f6dbb460ca52b35f3ff2de7755a58cba045af0e`. T-02 through T-06 and T-08 are integrated, verified and closed. T-07 is reopened for the confirmed AI Settings response race; its bounded worker repair is pending T-09 integration. T-09 is finishing demo/accessibility verification in its assigned worktree. T-10 remains blocked until T-09 integration is verified. T-01 remains open only for actual remote CI. No PR exists yet.
 
 ## Historical implementation checkpoints
 
@@ -141,3 +141,6 @@ T-08 worker checks report lint/types, 33 unit and 85 PostgreSQL tests passing, i
 Worker `6056f4c5bbd8ff3d40c6bd5f3fcb5d75ee17916a` integrated as `cd180a3`; root `7f6dbb460ca52b35f3ff2de7755a58cba045af0e` mounts administrator privacy controls on actual Settings. Coordinator lint, types, production build, 33 unit and all 85 PostgreSQL tests pass. The actual Settings/detail/pipeline privacy browser test passes, covering preview/cancel/confirm, preserved agreement history and same-opportunity regeneration. Fictional desktop/390px Settings and outcome screenshots were inspected. The isolated event-only regression passes and an intentionally removed event scan makes it fail; the source was restored before commit.
 
 Read-only reviewer `/root/test_runtime` confirms exact integrated composition and earlier selection/concurrency repairs at `7f6dbb4`, with no material finding in this bounded inspection. #9 closes with integrated criterion evidence. Final complete-feature review, fresh Compose/restore verification and remote CI remain pending. T-09's final browser run identified an initial AI Settings response race; its worker is making a bounded UI repair and regression without changing the AI service contract.
+
+
+T-07/#8 is reopened after T-09 browser verification confirmed that a late initial Settings response can overwrite edited model input. The worker repair includes abort cleanup and an edited/saved guard. Its deterministic delayed-response regression passes fixed code and fails the original component. Root will reclose #8 only after integrated verification; no service or permission contract change is proposed. T-09 continues the assigned repair and final checks.
