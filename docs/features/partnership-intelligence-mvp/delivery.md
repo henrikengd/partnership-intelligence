@@ -14,6 +14,8 @@ The original planning workspace remains untouched and its local main is unborn. 
 
 ## Current assignment and blockers
 
+Current checked application: 36470bc29870246e5ab271e1dcd879fe400902b6. T-06 is integrated and locally verified. T-07 is awaiting integration and repairs to its final AI validation. T-08 and T-09 remain blocked. Earlier checkpoints below retain their measured evidence and are historical where superseded.
+
 T-01 / #2 has been integrated as `2f9e821` from worker commit `f1a6e21a1b5d124b2e4fbd79e3c5137cb1260766`. The coordinator independently passed `npm ci`, lint, typecheck, production build, four unit tests, nine PostgreSQL integration tests, migrations and the complete Chromium access workflow on this commit. Worker evidence additionally establishes actual Compose build/bootstrap/restart persistence and operator recovery, documented in notes/t-01-verification.md. GitHub CI remains pending the final feature PR, so #2 remains open for that acceptance criterion. Its integrated functional prerequisites are verified and T-02 is eligible; tracker comments must distinguish this from full closure.
 
 T-02 / #3 worker /root/foundation committed 770a97274e5e75dcc4973d6671d858336d11da31, integrated as 39138340dc618a5144dc8a017237933b0778d498. Coordinator passed locked install, lint, types, production build, 10 unit tests, 17 PostgreSQL tests and both Chromium workflows. Desktop and 390px fictional detail screenshots were inspected. #3 was closed with criterion evidence, then reopened after independent review found two P2 defects. Focused coordinator repairs preserve factual snapshot revision during factor review and lock an activity before its completion guard. Repair commit 85c5c24f7270fae1caf43f1d2fda039b3dfd545d passed lint, types, build, unit10, PG19 and Chromium2. Both new regression cases were proven to fail against the old implementation. /root/test_runtime independently reviewed the focused patch and confirmed both findings resolved with no new material issue. #3 is reclosed with repair evidence.
@@ -34,7 +36,7 @@ T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.
 
 ## Next action
 
-Integrate T-06's early schema contract serially, release its metadata to T-07, then integrate and verify completed T-06/T-07 code in order. Only root updates the integration branch and tracker. T-08/T-09 remain blocked until both tickets are integrated and verified. Preserve #2 pending final CI and the parent as open until PR merge.
+Finish bounded T-06 composition review and record its closure. Integrate T-07 implementation and validation repair, mount actual detail/settings/startup controls, then verify before releasing T-08/T-09. Only root updates the integration branch and tracker. T-08/T-09 remain blocked until both tickets are integrated and verified. Preserve #2 pending final CI and the parent as open until PR merge.
 
 ## Infrastructure and tracker reconciliation
 
@@ -79,3 +81,10 @@ Schema-only worker7a7a25693ecb2b1db836c448005e7b429cc4787f integrated as8d73b10.
 Bounded read-only T-06 review of changing sources atop7a7a256 identified legacy completion dates invented on follow-up edits, resolved follow-ups remaining resolved after rescheduling, and linked partnerships movable to another company. Root also identified agreement-date coupling to contribution dates and the older graph-history projection using recording dates as occurrence dates. Worker reports repairs and PostgreSQL regressions in progress; root has not integrated or verified this application work yet.
 
 Bounded read-only T-07 review of changing sources atop adopted e3216ae identified short recorded names omitted by minimization and saved-run history depending on a valid new outbound packet. Root also requested exact source preview, generic role choice, named-contact/route compatibility, rejection of invented names mixed with legitimate roles, Unicode/email cases, empty/partial draft checks, free-text invented score/probability checks, bounded UTF-8 envelopes and stable action keys after uncertain client responses. Worker is repairing/testing these in isolation. No completed T-06/T-07 or final feature review is claimed.
+
+
+## T-06 integrated application checkpoint
+
+Worker dcb4daf0321a8c480b2bcdaafbdefcb5042c440e integrated as bbaf70fce94e1397b681b471c0042e60ce9071a6. Coordinator36470bc29870246e5ab271e1dcd879fe400902b6 connects actual LifecycleControls and OutreachActivities to opportunity detail, with pipeline navigation, dashboard follow-ups and company-history links. Lint/types/build/unit14/PG59/Chromium10 pass on the integrated application. Existing first-workflow coverage uses the new recorded-action controls and preserves completion, brief edits and overdue checks. Fictional390px rendered detail was inspected. Read-only reviewer /root/test_runtime confirms the three P2 repairs at bbaf70f and the independent occurrence/contribution dates and history projection; final composition confirmation is pending. Full-feature review and remote CI remain pending.
+
+T-07 worker b9841d51668e472194694e8c20ba9eabd324c81c is committed but not integrated. Its adopted T-06 schema commit must not be replayed. Bounded review confirms short-name redaction and saved-history fixes, but the role-string invented-name exemption and a recorded contact without a selected nonrefused route remain open. The same isolated worker is repairing these before coordinator integration.
