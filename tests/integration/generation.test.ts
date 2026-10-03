@@ -20,10 +20,11 @@ import {
   editOpportunity,
   reviewFactors,
 } from "../../src/modules/opportunities/service";
+import { reviewOpportunity } from "../../src/modules/opportunities/review";
 import {
-  reviewOpportunity,
-  startPursuing,
-} from "../../src/modules/opportunities/review";
+  transitionOpportunity,
+  getLifecycleDetail,
+} from "../../src/modules/outreach/lifecycle";
 import { getOpportunityList } from "../../src/modules/opportunities/list";
 import { recoverInterruptedGenerationRuns } from "../../src/modules/opportunities/recovery";
 import { companyPaths } from "../../src/modules/network/service";
@@ -39,6 +40,29 @@ import {
 import { unknownFactors } from "../../src/modules/opportunities/scoring";
 beforeEach(resetTestDatabase);
 afterAll(() => pool.end());
+// Exercise the final lifecycle entry point, including its persisted event history.
+async function pursue(headers: Headers, id: string) {
+  const before = await getLifecycleDetail(headers, id);
+  const result = await transitionOpportunity(headers, id, {
+    requestId: randomUUID(),
+    action: "transition",
+    fromState: before.record.state,
+    toState: "pursuing",
+  });
+  if (before.record.state !== "pursuing") {
+    expect(result.event).toMatchObject({
+      action: "transition",
+      opportunityId: id,
+      fromState: before.record.state,
+      toState: "pursuing",
+    });
+    expect(result.event?.reviewId).toBeTruthy();
+    const saved = await getLifecycleDetail(headers, id);
+    expect(saved.events).toHaveLength(before.events.length + 1);
+    expect(saved.events).toContainEqual(result.event);
+  }
+  return result.record;
+}
 function selection(
   f: Awaited<ReturnType<typeof savedWorkflow>>,
   key = randomUUID(),
@@ -203,7 +227,7 @@ describe("bounded generation and readiness", () => {
     );
     expect(detail.record.previousOpportunityId).toBe(first.id);
     await reviewOpportunity(f.headers, detail.record.id, ready(f));
-    await startPursuing(f.headers, detail.record.id);
+    await pursue(f.headers, detail.record.id);
     const skip = await startGenerationRun(f.headers, {
       ...selection(f),
       allowNewAfterClosed: true,
@@ -221,7 +245,7 @@ describe("bounded generation and readiness", () => {
       partnershipType: "in_kind",
     });
     await reviewOpportunity(f.headers, initial.id, ready(f));
-    await startPursuing(f.headers, initial.id);
+    await pursue(f.headers, initial.id);
     const secondNeed = await saveRecord(f.headers, "needs", {
       title: "Another manufacturing deliverable",
       description: "Make a different component batch",
@@ -295,6 +319,7 @@ describe("bounded generation and readiness", () => {
       targetRole: "Operations lead",
       channel: "email",
       description: "Fictional completed first contact.",
+      occurredDate: "2020-01-01",
     });
     const factors = unknownFactors();
     for (const factor of Object.values(factors)) {
@@ -343,9 +368,10 @@ describe("bounded generation and readiness", () => {
       companyId: f.companyId,
       partnershipType: "in_kind",
     });
-    await expect(startPursuing(f.headers, op.id)).rejects.toMatchObject({
+    await expect(pursue(f.headers, op.id)).rejects.toMatchObject({
       code: "REVIEW_REQUIRED",
     });
+    expect((await getLifecycleDetail(f.headers, op.id)).events).toHaveLength(0);
     await expect(
       reviewOpportunity(f.headers, op.id, { ...ready(f), fitReviewed: false }),
     ).rejects.toBeDefined();
@@ -360,7 +386,7 @@ describe("bounded generation and readiness", () => {
     expect(
       (await getOpportunityDetail(f.headers, op.id)).record.reviewState,
     ).toBe("ready_for_action");
-    expect((await startPursuing(f.headers, op.id)).state).toBe("pursuing");
+    expect((await pursue(f.headers, op.id)).state).toBe("pursuing");
     await editOpportunity(f.headers, op.id, {
       ownerId: null,
       ask: "Machine twenty fixtures with revised scope",
@@ -369,7 +395,7 @@ describe("bounded generation and readiness", () => {
       nextAction: "Review the revised quotation",
       approach: "Explicit cold discussion",
     });
-    await expect(startPursuing(f.headers, op.id)).rejects.toMatchObject({
+    await expect(pursue(f.headers, op.id)).rejects.toMatchObject({
       code: "REVIEW_REQUIRED",
     });
     await reviewOpportunity(f.headers, op.id, ready(f));
@@ -382,9 +408,10 @@ describe("bounded generation and readiness", () => {
       observedDate: new Date().toISOString().slice(0, 10),
       reviewState: "disputed",
     });
-    await expect(startPursuing(f.headers, op.id)).rejects.toMatchObject({
+    await expect(pursue(f.headers, op.id)).rejects.toMatchObject({
       code: "REVIEW_REQUIRED",
     });
+    expect((await getLifecycleDetail(f.headers, op.id)).events).toHaveLength(1);
   });
   it("rejects a refused warm path but permits a reviewed cold alternative without inventing authority", async () => {
     const f = await savedWorkflow();
@@ -413,7 +440,7 @@ describe("bounded generation and readiness", () => {
       }),
     ).rejects.toMatchObject({ code: "ROUTE_UNAVAILABLE" });
     await reviewOpportunity(f.headers, op.id, ready(f));
-    expect((await startPursuing(f.headers, op.id)).state).toBe("pursuing");
+    expect((await pursue(f.headers, op.id)).state).toBe("pursuing");
     expect(
       (await getOpportunityDetail(f.headers, op.id)).latest.factors.access
         .value,
@@ -451,7 +478,7 @@ describe("bounded generation and readiness", () => {
       ...ready(f),
       targetPersonId: manager.id,
     });
-    expect((await startPursuing(f.headers, op.id)).state).toBe("pursuing");
+    expect((await pursue(f.headers, op.id)).state).toBe("pursuing");
   });
   it("excludes future source dates from candidates and fit/evidence scores while retaining the claim and gap", async () => {
     const f = await savedWorkflow();

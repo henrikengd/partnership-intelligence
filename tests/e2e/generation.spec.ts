@@ -246,7 +246,7 @@ test("reload shows the chosen alternative route and named terminal contact, then
   const { getOpportunityDetail, editOpportunity } =
     await import("../../src/modules/opportunities/service");
   const { companyPaths } = await import("../../src/modules/network/service");
-  const { reviewOpportunity, startPursuing } =
+  const { reviewOpportunity } =
     await import("../../src/modules/opportunities/review");
   const d = await getOpportunityDetail(f.headers, id);
   const path = companyPaths(d.data, f.companyId).current.find(
@@ -272,7 +272,18 @@ test("reload shows the chosen alternative route and named terminal contact, then
     approachMode: "introduction",
     pathId: path.id,
   });
-  await startPursuing(f.headers, id);
+  const { transitionOpportunity, getLifecycleDetail } =
+    await import("../../src/modules/outreach/lifecycle");
+  const pursuit = await transitionOpportunity(f.headers, id, {
+    requestId: randomUUID(),
+    action: "transition",
+    fromState: "suggested",
+    toState: "pursuing",
+  });
+  expect(pursuit.event?.reviewId).toBeTruthy();
+  expect((await getLifecycleDetail(f.headers, id)).events).toContainEqual(
+    pursuit.event,
+  );
   await login(page);
   await page.goto(`/opportunities/${id}`);
   await page.reload();
