@@ -351,6 +351,37 @@ describe("optional private AI requests", () => {
       draft: { ask: "Machine ten fictional fixtures." },
     });
   });
+  it("omits unknown named titles in any capitalization and preserves known professional role labels", async () => {
+    const f = await fixture();
+    for (const title of [
+      "john smith engineer",
+      "王伟 engineer",
+      "manufacturing engineer",
+    ]) {
+      await saveRecord(f.headers, "relationships", {
+        id: f.relationshipId,
+        kind: "works_at",
+        personId: f.personId,
+        companyId: f.companyId,
+        title,
+        state: "current",
+        evidenceId: f.employmentSourceId,
+      });
+      const preview = await previewAiContext(f.headers, f.opportunityId);
+      if (title === "manufacturing engineer") {
+        expect(preview.packet.allowedContactRoles).toContain(title);
+        expect(
+          preview.packet.routes[0].connections.some((c) => c.role === title),
+        ).toBe(true);
+      } else {
+        expect(JSON.stringify(preview.packet)).not.toContain(title);
+        expect(preview.packet.allowedContactRoles).not.toContain(title);
+        expect(
+          preview.packet.routes[0].connections.some((c) => c.role === null),
+        ).toBe(true);
+      }
+    }
+  });
   it("omits unrecorded people's raw need/source narrative by default and sends only explicitly edited sanitized text", async () => {
     const f = await fixture();
     await enable(f);

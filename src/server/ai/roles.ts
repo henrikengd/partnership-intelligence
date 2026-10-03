@@ -6,7 +6,7 @@ const roleWords = new Set(
 );
 const acronyms = new Set("CEO CTO CFO COO VP CNC IT HR".split(" "));
 const commonModifiers = new Set(
-  "grant grants manufacturing operations technical software facilities finance fundraising partnership partnerships development engineering production volunteer community procurement logistics materials composites marketing alumni student faculty board sponsorship human resources business research recruitment sales funding communications international public regional quality cloud supply project program outreach external corporate mechanical electrical environmental legal account computer numerical control".split(
+  "grant grants manufacturing operations technical software facilities finance fundraising partnership partnerships development engineering hydrology production volunteer community procurement logistics materials composites marketing alumni student faculty board sponsorship human resources business research recruitment sales funding communications international public regional quality cloud supply project program outreach external corporate mechanical electrical environmental legal account computer numerical control".split(
     " ",
   ),
 );
@@ -34,7 +34,6 @@ export function isGenericRole(value: string) {
     return false;
   return words.every(
     (word) =>
-      !/^\p{Lu}/u.test(word) ||
       roleWords.has(word.toLowerCase()) ||
       commonModifiers.has(word.toLowerCase()) ||
       acronyms.has(word),

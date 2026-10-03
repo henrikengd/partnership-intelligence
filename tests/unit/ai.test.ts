@@ -438,3 +438,19 @@ it("accepts ordinary sentence-case prose with technical acronyms while retaining
     ),
   ).toThrow("PRIVATE_DRAFT");
 });
+
+it("accepts only professional vocabulary in generic roles regardless of name capitalization", () => {
+  for (const role of [
+    "john smith engineer",
+    "JOHN SMITH engineer",
+    "王伟 engineer",
+    "manufacturing john engineer",
+  ])
+    expect(isGenericRole(role)).toBe(false);
+  for (const role of [
+    "manufacturing engineer",
+    "Manufacturing Engineer",
+    "hydrology specialist",
+  ])
+    expect(isGenericRole(role)).toBe(true);
+});
