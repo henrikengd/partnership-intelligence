@@ -71,8 +71,8 @@ export function buildPacket(
     );
   const packet: AiPacket = {
     need: {
-      title: clean(need.title),
-      description: clean(need.description),
+      title: "Selected organizational need",
+      description: "",
       partnershipType: clean(record.partnershipType),
       deadline: need.deadline,
     },
@@ -82,8 +82,9 @@ export function buildPacket(
       map.evidence[ref] = e.id;
       return {
         ref,
-        claim: clean(e.claim),
-        excerpt: clean(e.excerpt),
+        claim:
+          "Source text omitted. Add a locally reviewed, sanitized claim before requesting an evidence-based draft.",
+        excerpt: "",
         observedDate: e.observedDate,
         reviewState: e.reviewState,
       };
@@ -100,7 +101,10 @@ export function buildPacket(
           const record = data.relationships.find((r) => r.id === edge.id);
           return {
             kind: record?.kind ?? "organization_affiliation",
-            role: record?.title ? clean(record.title) : null,
+            role:
+              record?.title && isGenericRole(clean(record.title))
+                ? clean(record.title)
+                : null,
           };
         }),
         people: p.nodes
@@ -301,6 +305,10 @@ function hasUnlistedProperName(value: string, packet: AiPacket) {
       ),
       "[supplied label]",
     );
+  prose = prose.replace(
+    /\b(?:AI|API|CAD|CNC|CSV|CEO|CTO|CFO|COO|HR|IT|NGO|VP)\b/g,
+    "[acronym]",
+  );
   // Unknown capitalized full names are prohibited even without an action verb.
   if (
     /(?<![\p{L}\p{N}_])\p{Lu}[\p{L}'’-]*\s+\p{Lu}[\p{L}'’-]*(?!\p{L})/u.test(

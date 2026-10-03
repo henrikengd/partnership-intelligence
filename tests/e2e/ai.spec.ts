@@ -8,6 +8,7 @@ import {
   retryAiRun,
   saveAiSettings,
 } from "../../src/server/ai/service";
+import { saveRecord } from "../../src/modules/records/service";
 import { AiError, type Provider } from "../../src/server/ai/contracts";
 import type { Page } from "@playwright/test";
 let f: Awaited<ReturnType<typeof savedWorkflow>> & { opportunityId: string };
@@ -54,6 +55,14 @@ const settings = (page: Page) =>
 test("reviews minimized editable context with AI disabled and no key at 390px", async ({
   page,
 }) => {
+  await saveRecord(f.headers, "evidence", {
+    id: f.sourceId,
+    claim: "John Smith reports CNC capacity",
+    sourceType: "observation",
+    attribution: "Fictional supplied conversation",
+    excerpt: "John Smith and 王伟 discuss fictional CNC capacity.",
+    observedDate: new Date().toISOString().slice(0, 10),
+  });
   await login(page);
   await page.goto(detailUrl());
   const p = panel(page);
@@ -64,12 +73,18 @@ test("reviews minimized editable context with AI disabled and no key at 390px", 
   const packet = p.getByLabel("Outbound JSON packet", { exact: true });
   await expect(packet).toBeVisible();
   expect(await packet.inputValue()).not.toMatch(
-    /Anna|Example|example.test|personId/,
+    /Anna|Example|example.test|personId|John Smith|王伟/,
   );
   expect(await packet.inputValue()).toContain("grant officer");
   await expect(
     p.getByRole("complementary", { name: "Local AI reference legend" }),
   ).toContainText("P1: Anna Example");
+  await p
+    .getByText("Review local need and source text", { exact: true })
+    .click();
+  await expect(
+    p.getByRole("complementary", { name: "Local AI reference legend" }),
+  ).toContainText("John Smith and 王伟");
   const approved = p.getByRole("checkbox", {
     name: "I reviewed this edited packet and approve sending it to OpenAI.",
     exact: true,

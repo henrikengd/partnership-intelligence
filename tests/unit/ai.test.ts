@@ -412,3 +412,29 @@ it("rejects unknown named people anywhere in actionable prose, without relying o
     ),
   ).not.toThrow();
 });
+
+it("accepts ordinary sentence-case prose with technical acronyms while retaining named-contact checks", () => {
+  expect(() =>
+    validateDraft(
+      {
+        ...draft,
+        whyFit: [
+          {
+            text: "Supplied CNC capability suggests a fit, pending review.",
+            evidenceRefs: ["E1"],
+          },
+        ],
+        ask: "Use CAD drawings for ten fixtures.",
+      },
+      packet,
+      [],
+    ),
+  ).not.toThrow();
+  expect(() =>
+    validateDraft(
+      { ...draft, nextAction: "CNC John Smith can arrange the meeting." },
+      packet,
+      [],
+    ),
+  ).toThrow("PRIVATE_DRAFT");
+});

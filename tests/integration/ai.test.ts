@@ -327,7 +327,7 @@ describe("optional private AI requests", () => {
       ),
     ).toBe(true);
   });
-  it("keeps saved draft history available when a valid domain edit cannot fit a new AI packet", async () => {
+  it("keeps saved draft history when an unsupported recorded role is omitted from minimized context", async () => {
     const f = await fixture();
     await enable(f);
     const run = await startAiRun(f.headers, await request(f), { provider });
@@ -340,14 +340,76 @@ describe("optional private AI requests", () => {
       state: "current",
       evidenceId: f.employmentSourceId,
     });
-    await expect(
-      previewAiContext(f.headers, f.opportunityId),
-    ).rejects.toThrow();
+    const minimized = await previewAiContext(f.headers, f.opportunityId);
+    expect(
+      minimized.packet.routes[0].connections.some((c) => c.role === null),
+    ).toBe(true);
+    expect(JSON.stringify(minimized.packet)).not.toContain("A".repeat(180));
     expect((await listAiRuns(f.headers, f.opportunityId))[0]).toMatchObject({
       id: run.id,
       status: "completed",
       draft: { ask: "Machine ten fictional fixtures." },
     });
+  });
+  it("omits unrecorded people's raw need/source narrative by default and sends only explicitly edited sanitized text", async () => {
+    const f = await fixture();
+    await enable(f);
+    await saveRecord(f.headers, "evidence", {
+      id: f.sourceId,
+      claim: "John Smith confirms CNC capacity",
+      sourceType: "observation",
+      attribution: "Supplied fictional conversation",
+      excerpt: "John Smith and 王伟 confirmed the CNC capacity.",
+      observedDate: new Date().toISOString().slice(0, 10),
+    });
+    await saveRecord(f.headers, "needs", {
+      id: f.needId,
+      title: "Workshop with John Smith",
+      description: "Speak to 王伟 about ten fixtures.",
+      category: "manufacturing",
+      urgency: 2,
+      partnershipType: "in_kind",
+    });
+    await generateOpportunity(f.headers, {
+      needId: f.needId,
+      companyId: f.companyId,
+      partnershipType: "in_kind",
+      refreshOpportunityId: f.opportunityId,
+    });
+    const preview = await previewAiContext(f.headers, f.opportunityId);
+    expect(JSON.stringify(preview.packet)).not.toMatch(
+      /John Smith|王伟|Speak to/,
+    );
+    expect(preview.packet.need.description).toBe("");
+    expect(preview.packet.evidence.every((e) => e.excerpt === "")).toBe(true);
+    expect(
+      preview.localReferences.evidence.find(
+        (e) => e.claim === "John Smith confirms CNC capacity",
+      )!.excerpt,
+    ).toContain("John Smith");
+    expect(preview.localReferences.need.title).toContain("John Smith");
+    const edited = structuredClone(preview.packet);
+    edited.need.title = "Manufacturing";
+    edited.need.description = "Machine ten workshop fixtures.";
+    edited.evidence[0].claim = "Company reports CNC machining capacity.";
+    edited.evidence[0].excerpt =
+      "The supplied equipment list includes CNC mills.";
+    const fake = vi.fn(provider);
+    expect(
+      (
+        await startAiRun(
+          f.headers,
+          {
+            opportunityId: f.opportunityId,
+            packet: edited,
+            previewRevision: preview.previewRevision,
+            idempotencyKey: crypto.randomUUID(),
+          },
+          { provider: fake },
+        )
+      ).status,
+    ).toBe("completed");
+    expect(fake.mock.calls[0][0]).toEqual(edited);
   });
   it("freezes an explicitly previewed generic role and rejects stale or invented metadata before networking", async () => {
     const f = await fixture();

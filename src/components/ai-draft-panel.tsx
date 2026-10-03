@@ -15,6 +15,8 @@ type Run = {
 export function AiDraftPanel({ opportunityId }: { opportunityId: string }) {
   const [packet, setPacket] = useState("");
   const [localReferences, setLocalReferences] = useState<{
+    need: { title: string; description: string };
+    evidence: { ref: string; claim: string; excerpt: string }[];
     people: { ref: string; name: string }[];
     routes: { ref: string; label: string; willingness: string }[];
   } | null>(null);
@@ -161,6 +163,19 @@ export function AiDraftPanel({ opportunityId }: { opportunityId: string }) {
                 These names and route labels stay in this installation. They are
                 separate from the outbound packet below.
               </p>
+              <details>
+                <summary>Review local need and source text</summary>
+                <p>{localReferences.need.title}</p>
+                <p>{localReferences.need.description}</p>
+                {localReferences.evidence.map((source) => (
+                  <article key={source.ref}>
+                    <p>
+                      {source.ref}: {source.claim}
+                    </p>
+                    <p>{source.excerpt}</p>
+                  </article>
+                ))}
+              </details>
               <ul>
                 {localReferences.people.map((person) => (
                   <li key={person.ref}>
@@ -189,6 +204,9 @@ export function AiDraftPanel({ opportunityId }: { opportunityId: string }) {
             disabled={busy}
           />
           <p>
+            Raw need and source narrative is omitted by default, including names
+            of people absent from network records. Review the local text and
+            explicitly add sanitized need, claim and excerpt text if useful.
             Remove unnecessary sources or edit text. Keep reference IDs, dates,
             review states, company and allowed roles unchanged. Maximum
             serialized context: 12,000 characters. No source links are fetched.

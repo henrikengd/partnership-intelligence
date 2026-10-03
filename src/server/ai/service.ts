@@ -116,6 +116,18 @@ export async function previewAiContext(
     previewRevision: result.previewRevision,
     settings: await getAiSettings(headers),
     localReferences: {
+      need: (() => {
+        const n = result.detail.data.needs.find(
+          (n) => n.id === result.detail.record.needId,
+        )!;
+        return { title: n.title, description: n.description };
+      })(),
+      evidence: Object.entries(result.referenceMap.evidence).map(
+        ([ref, id]) => {
+          const source = result.detail.data.evidence.find((e) => e.id === id)!;
+          return { ref, claim: source.claim, excerpt: source.excerpt };
+        },
+      ),
       people: Object.entries(result.referenceMap.people).map(([ref, id]) => ({
         ref,
         name:
