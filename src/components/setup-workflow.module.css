@@ -1,0 +1,75 @@
+.workflow {
+  max-width: 1100px;
+}
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  list-style: none;
+  padding: 0;
+  gap: 8px;
+  margin: 28px 0;
+}
+.steps li {
+  background: #eef2f5;
+  border: 1px solid #dbe2e8;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.steps span {
+  color: #586575;
+  font-weight: 700;
+}
+.steps small {
+  color: #586575;
+}
+.steps .active {
+  background: #e3f2ed;
+  border-color: #6b9d8d;
+  color: #154e3c;
+  font-weight: 700;
+}
+.preview {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+.preview article {
+  background: white;
+  border: 1px solid #dbe2e8;
+  border-radius: 12px;
+  padding: 18px;
+  min-width: 0;
+}
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.fields div {
+  min-width: 0;
+}
+.fields dt {
+  color: #586575;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+.fields dd {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.mapping {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+.workflow input,
+.workflow select {
+  max-width: 100%;
+}

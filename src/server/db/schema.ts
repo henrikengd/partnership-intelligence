@@ -1,0 +1,871 @@
+import { sql } from "drizzle-orm";
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  boolean,
+  pgEnum,
+  integer,
+  uniqueIndex,
+  bigint,
+  check,
+  date,
+  numeric,
+  jsonb,
+  type AnyPgColumn,
+  index,
+} from "drizzle-orm/pg-core";
+export const accessRole = pgEnum("access_role", ["admin", "editor"]);
+const dates = {
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+};
+export const user = pgTable("auth_user", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
+  role: accessRole("role").notNull().default("editor"),
+  active: boolean("active").notNull().default(true),
+  ...dates,
+});
+export const session = pgTable("auth_session", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  token: text("token").notNull().unique(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  ...dates,
+});
+export const account = pgTable(
+  "auth_account",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", {
+      withTimezone: true,
+    }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
+      withTimezone: true,
+    }),
+    scope: text("scope"),
+    password: text("password"),
+    ...dates,
+  },
+  (t) => [
+    uniqueIndex("auth_account_provider_user").on(t.providerId, t.accountId),
+  ],
+);
+export const verification = pgTable("auth_verification", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  ...dates,
+});
+export const invitation = pgTable("invitation", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tokenHash: text("token_hash").notNull().unique(),
+  email: text("email").notNull(),
+  role: accessRole("role").notNull(),
+  invitedBy: uuid("invited_by")
+    .notNull()
+    .references(() => user.id),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  ...dates,
+});
+export const organization = pgTable(
+  "organization",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    singletonKey: integer("singleton_key").notNull().default(1).unique(),
+    name: text("name").notNull(),
+    mission: text("mission").notNull().default(""),
+    website: text("website"),
+    type: text("type").notNull().default("other"),
+    location: text("location").notNull().default(""),
+    teamSize: integer("team_size"),
+    timezone: text("timezone").notNull().default("UTC"),
+    privacyRevision: integer("privacy_revision").notNull().default(1),
+    ...dates,
+  },
+  (t) => [
+    check("organization_single_installation", sql`${t.singletonKey} = 1`),
+    check(
+      "organization_team_size_nonnegative",
+      sql`${t.teamSize} IS NULL OR ${t.teamSize} >= 0`,
+    ),
+  ],
+);
+
+export const rateLimit = pgTable("auth_rate_limit", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+});
+
+// All business records belong to this installation's single organization.
+const domainBase = () => ({
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  recordedBy: uuid("recorded_by")
+    .notNull()
+    .references(() => user.id),
+  revision: integer("revision").notNull().default(1),
+  ...dates,
+});
+export const need = pgTable(
+  "need",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    category: text("category").notNull(),
+    urgency: integer("urgency"),
+    deadline: date("deadline"),
+    estimatedValue: numeric("estimated_value", { precision: 14, scale: 2 }),
+    currency: text("currency").notNull().default("NOK"),
+    partnershipType: text("partnership_type").notNull().default("in_kind"),
+    active: boolean("active").notNull().default(true),
+  },
+  (t) => [
+    check(
+      "need_urgency_bounds",
+      sql`${t.urgency} IS NULL OR ${t.urgency} BETWEEN 0 AND 4`,
+    ),
+    check(
+      "need_value_nonnegative",
+      sql`${t.estimatedValue} IS NULL OR ${t.estimatedValue} >= 0`,
+    ),
+  ],
+);
+export const person = pgTable(
+  "person",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    name: text("name").notNull(),
+    email: text("email"),
+    sourceId: text("source_id"),
+    notes: text("notes").notNull().default(""),
+  },
+  (t) => [
+    uniqueIndex("person_source_id")
+      .on(t.organizationId, t.sourceId)
+      .where(sql`${t.sourceId} IS NOT NULL`),
+  ],
+);
+export const affiliation = pgTable(
+  "affiliation",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    personId: uuid("person_id")
+      .notNull()
+      .references(() => person.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    state: text("state").notNull().default("current"),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+  },
+  (t) => [
+    uniqueIndex("affiliation_person_role").on(
+      t.organizationId,
+      t.personId,
+      t.role,
+    ),
+    check(
+      "affiliation_dates",
+      sql`${t.startDate} IS NULL OR ${t.endDate} IS NULL OR ${t.startDate} <= ${t.endDate}`,
+    ),
+    check(
+      "affiliation_state",
+      sql`${t.state} IN ('current','ended','unknown')`,
+    ),
+    check(
+      "affiliation_current_end",
+      sql`${t.state} <> 'current' OR ${t.endDate} IS NULL`,
+    ),
+  ],
+);
+export const company = pgTable(
+  "company",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    name: text("name").notNull(),
+    website: text("website"),
+    domain: text("domain"),
+    description: text("description").notNull().default(""),
+    sourceId: text("source_id"),
+  },
+  (t) => [
+    uniqueIndex("company_source_id")
+      .on(t.organizationId, t.sourceId)
+      .where(sql`${t.sourceId} IS NOT NULL`),
+  ],
+);
+export const evidence = pgTable(
+  "evidence",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    claim: text("claim").notNull(),
+    sourceType: text("source_type").notNull(),
+    url: text("url"),
+    attribution: text("attribution"),
+    excerpt: text("excerpt").notNull(),
+    observedDate: date("observed_date").notNull(),
+    reviewState: text("review_state").notNull().default("supplied"),
+    reviewDate: date("review_date"),
+  },
+  (t) => [
+    check(
+      "evidence_source",
+      sql`(${t.sourceType}='supplied_source' AND ${t.url} IS NOT NULL) OR (${t.sourceType}='observation' AND ${t.attribution} IS NOT NULL)`,
+    ),
+    check(
+      "evidence_review_state",
+      sql`${t.reviewState} IN ('supplied','reviewed','disputed','superseded')`,
+    ),
+    check(
+      "evidence_review_date",
+      sql`${t.reviewState} <> 'reviewed' OR ${t.reviewDate} IS NOT NULL`,
+    ),
+  ],
+);
+export const capability = pgTable("capability", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ...domainBase(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => company.id, { onDelete: "cascade" }),
+  category: text("category").notNull(),
+  description: text("description").notNull(),
+  evidenceId: uuid("evidence_id")
+    .notNull()
+    .references(() => evidence.id),
+});
+export const relationship = pgTable(
+  "relationship",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    sourceId: text("source_id"),
+    kind: text("kind").notNull(),
+    personId: uuid("person_id")
+      .notNull()
+      .references(() => person.id, { onDelete: "cascade" }),
+    targetPersonId: uuid("target_person_id").references(() => person.id, {
+      onDelete: "cascade",
+    }),
+    companyId: uuid("company_id").references(() => company.id, {
+      onDelete: "cascade",
+    }),
+    title: text("title").notNull().default(""),
+    state: text("state").notNull().default("current"),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    strength: integer("strength"),
+    willingness: text("willingness").notNull().default("unknown"),
+    willingnessDate: date("willingness_date"),
+    willingnessSource: text("willingness_source"),
+    evidenceId: uuid("evidence_id")
+      .notNull()
+      .references(() => evidence.id),
+  },
+  (t) => [
+    uniqueIndex("relationship_source_id")
+      .on(t.organizationId, t.sourceId)
+      .where(sql`${t.sourceId} IS NOT NULL`),
+    check(
+      "relationship_endpoints",
+      sql`(${t.kind} IN ('works_at','previously_worked_at','interned_at') AND ${t.companyId} IS NOT NULL AND ${t.targetPersonId} IS NULL) OR (${t.kind} IN ('knows','introduced_by','studied_with') AND ${t.targetPersonId} IS NOT NULL AND ${t.companyId} IS NULL AND ${t.personId} <> ${t.targetPersonId})`,
+    ),
+    check(
+      "relationship_dates",
+      sql`${t.startDate} IS NULL OR ${t.endDate} IS NULL OR ${t.startDate} <= ${t.endDate}`,
+    ),
+    check(
+      "relationship_previous_state",
+      sql`${t.kind} <> 'previously_worked_at' OR ${t.state}='ended'`,
+    ),
+    check(
+      "relationship_state",
+      sql`${t.state} IN ('current','ended','unknown')`,
+    ),
+    check(
+      "relationship_current_end",
+      sql`${t.state} <> 'current' OR ${t.endDate} IS NULL`,
+    ),
+    check(
+      "relationship_strength",
+      sql`${t.strength} IS NULL OR ${t.strength} BETWEEN 0 AND 4`,
+    ),
+    check(
+      "relationship_willingness",
+      sql`${t.willingness} IN ('yes','no','unknown') AND (${t.willingness}='unknown' OR (${t.willingnessDate} IS NOT NULL AND ${t.willingnessSource} IS NOT NULL))`,
+    ),
+  ],
+);
+export type BriefFields = {
+  ask: string;
+  valueExchange: string;
+  contactRole: string;
+  nextAction: string;
+  approach: string;
+};
+export const opportunity = pgTable(
+  "opportunity",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    needId: uuid("need_id")
+      .notNull()
+      .references(() => need.id),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => company.id),
+    partnershipType: text("partnership_type").notNull(),
+    state: text("state").notNull().default("suggested"),
+    reviewState: text("review_state").notNull().default("needs_review"),
+    previousOpportunityId: uuid("previous_opportunity_id").references(
+      (): AnyPgColumn => opportunity.id,
+    ),
+    ownerId: uuid("owner_id").references(() => user.id),
+    partnershipId: uuid("partnership_id").references(
+      (): AnyPgColumn => partnership.id,
+    ),
+    manualBrief: jsonb("manual_brief")
+      .$type<Partial<BriefFields>>()
+      .notNull()
+      .default({}),
+    inputRevision: integer("input_revision").notNull().default(1),
+  },
+  (t) => [
+    uniqueIndex("opportunity_active_unique")
+      .on(t.organizationId, t.needId, t.companyId, t.partnershipType)
+      .where(sql`${t.state} NOT IN ('declined','archived')`),
+    check(
+      "opportunity_review_state",
+      sql`${t.reviewState} IN ('research_needed','needs_review','ready_for_action')`,
+    ),
+    check(
+      "opportunity_state",
+      sql`${t.state} IN ('suggested','shortlisted','pursuing','agreed','declined','archived')`,
+    ),
+  ],
+);
+export const assessment = pgTable(
+  "assessment",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => opportunity.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    rubricVersion: text("rubric_version").notNull().default("v1"),
+    inputRevision: integer("input_revision").notNull(),
+    humanFactorKeys: jsonb("human_factor_keys")
+      .$type<import("../../modules/opportunities/scoring").FactorKey[]>()
+      .notNull()
+      .default([]),
+    factors: jsonb("factors")
+      .$type<import("../../modules/opportunities/scoring").Factors>()
+      .notNull(),
+    brief: jsonb("brief")
+      .$type<import("../../modules/opportunities/contracts").GeneratedBrief>()
+      .notNull(),
+    priority: numeric("priority", { precision: 6, scale: 2 }).notNull(),
+    coverage: integer("coverage").notNull(),
+    recordedBy: uuid("recorded_by")
+      .notNull()
+      .references(() => user.id),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("assessment_opportunity_version").on(
+      t.opportunityId,
+      t.version,
+    ),
+  ],
+);
+export const assessmentEvidence = pgTable(
+  "assessment_evidence",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    assessmentId: uuid("assessment_id")
+      .notNull()
+      .references(() => assessment.id, { onDelete: "cascade" }),
+    evidenceId: uuid("evidence_id")
+      .notNull()
+      .references(() => evidence.id),
+  },
+  (t) => [
+    uniqueIndex("assessment_evidence_pair").on(t.assessmentId, t.evidenceId),
+  ],
+);
+export const activity = pgTable(
+  "activity",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => opportunity.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    status: text("status").notNull().default("planned"),
+    targetPersonId: uuid("target_person_id").references(() => person.id),
+    targetRole: text("target_role").notNull().default(""),
+    channel: text("channel").notNull(),
+    description: text("description").notNull(),
+    followUpDate: date("follow_up_date"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    occurredDate: date("occurred_date"),
+    followUpResolvedAt: timestamp("follow_up_resolved_at", {
+      withTimezone: true,
+    }),
+    followUpResolvedBy: uuid("follow_up_resolved_by").references(() => user.id),
+  },
+  (t) => [
+    check(
+      "activity_status_completion",
+      sql`(${t.status}='planned' AND ${t.completedAt} IS NULL) OR (${t.status}='completed' AND ${t.completedAt} IS NOT NULL)`,
+    ),
+    check(
+      "activity_kind",
+      sql`${t.kind} IN ('introduction','outreach','meeting','follow_up')`,
+    ),
+  ],
+);
+
+export const partnership = pgTable(
+  "partnership",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ...domainBase(),
+    sourceId: text("source_id"),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => company.id),
+    title: text("title").notNull(),
+    type: text("type").notNull(),
+    state: text("state").notNull().default("current"),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    description: text("description").notNull().default(""),
+    evidenceId: uuid("evidence_id").references(() => evidence.id),
+  },
+  (t) => [
+    check(
+      "partnership_state",
+      sql`${t.state} IN ('current','ended','unknown')`,
+    ),
+    check(
+      "partnership_dates",
+      sql`${t.startDate} IS NULL OR ${t.endDate} IS NULL OR ${t.startDate} <= ${t.endDate}`,
+    ),
+    check(
+      "partnership_current_end",
+      sql`${t.state} <> 'current' OR ${t.endDate} IS NULL`,
+    ),
+    uniqueIndex("partnership_source_id")
+      .on(t.organizationId, t.sourceId)
+      .where(sql`${t.sourceId} IS NOT NULL`),
+  ],
+);
+export const previousOutreach = pgTable("previous_outreach", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ...domainBase(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => company.id),
+  personId: uuid("person_id").references(() => person.id),
+  contactRole: text("contact_role").notNull().default(""),
+  channel: text("channel").notNull(),
+  occurredDate: date("occurred_date").notNull(),
+  description: text("description").notNull(),
+  outcome: text("outcome").notNull().default("unknown"),
+  source: text("source").notNull(),
+});
+export const onboarding = pgTable(
+  "onboarding",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .unique()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    step: integer("step").notNull().default(0),
+    skippedSteps: jsonb("skipped_steps")
+      .$type<number[]>()
+      .notNull()
+      .default([]),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...dates,
+  },
+  (t) => [check("onboarding_step", sql`${t.step} BETWEEN 0 AND 8`)],
+);
+export type ImportKind =
+  "people" | "companies" | "relationships" | "partnerships";
+export type ImportRow = {
+  row: number;
+  input: Record<string, unknown>;
+  errors: string[];
+  candidates: { id: string; label: string; reason: string; revision: number }[];
+  warnings: string[];
+};
+export const importBatch = pgTable(
+  "import_batch",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    recordedBy: uuid("recorded_by")
+      .notNull()
+      .references(() => user.id),
+    kind: text("kind").$type<ImportKind>().notNull(),
+    status: text("status").notNull().default("pending"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    rows: jsonb("rows").$type<ImportRow[]>().notNull().default([]),
+    summary: jsonb("summary").$type<{
+      created: number;
+      updated: number;
+      excluded: number;
+      total: number;
+    } | null>(),
+    mappings: jsonb("mappings")
+      .$type<
+        { row: number; recordId: string; action: "created" | "updated" }[]
+      >()
+      .notNull()
+      .default([]),
+    ...dates,
+  },
+  (t) => [
+    index("import_batch_expiry").on(t.organizationId, t.status, t.expiresAt),
+    check(
+      "import_batch_status",
+      sql`${t.status} IN ('pending','committed','cancelled','expired')`,
+    ),
+  ],
+);
+
+export const companyNeedIncentive = pgTable("company_need_incentive", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ...domainBase(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => company.id, { onDelete: "cascade" }),
+  needId: uuid("need_id")
+    .notNull()
+    .references(() => need.id, { onDelete: "cascade" }),
+  description: text("description").notNull(),
+  evidenceId: uuid("evidence_id")
+    .notNull()
+    .references(() => evidence.id),
+});
+export const generationRun = pgTable(
+  "generation_run",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    requestedBy: uuid("requested_by")
+      .notNull()
+      .references(() => user.id),
+    needId: uuid("need_id")
+      .notNull()
+      .references(() => need.id),
+    idempotencyKey: uuid("idempotency_key").notNull(),
+    requestFingerprint: text("request_fingerprint").notNull(),
+    selection: jsonb("selection")
+      .$type<
+        import("../../modules/opportunities/run-contracts").GenerationSelection
+      >()
+      .notNull(),
+    inputRevision: integer("input_revision").notNull(),
+    status: text("status").notNull().default("running"),
+    attempt: integer("attempt").notNull().default(1),
+    results: jsonb("results")
+      .$type<
+        import("../../modules/opportunities/run-contracts").GenerationResult[]
+      >()
+      .notNull()
+      .default([]),
+    errorCategory: text("error_category"),
+    startedAt: timestamp("started_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("generation_run_idempotency").on(
+      t.organizationId,
+      t.idempotencyKey,
+    ),
+    check(
+      "generation_run_status",
+      sql`${t.status} IN ('running','completed','failed','interrupted')`,
+    ),
+    check(
+      "generation_run_finish",
+      sql`(${t.status}='running' AND ${t.finishedAt} IS NULL) OR (${t.status}<>'running' AND ${t.finishedAt} IS NOT NULL)`,
+    ),
+    check(
+      "generation_run_candidates",
+      sql`jsonb_array_length(${t.selection}->'companyIds') BETWEEN 1 AND 20`,
+    ),
+  ],
+);
+export const opportunityReview = pgTable(
+  "opportunity_review",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => opportunity.id, { onDelete: "cascade" }),
+    assessmentId: uuid("assessment_id")
+      .notNull()
+      .references(() => assessment.id, { onDelete: "cascade" }),
+    inputRevision: integer("input_revision").notNull(),
+    briefRevision: integer("brief_revision").notNull(),
+    reviewedBy: uuid("reviewed_by")
+      .notNull()
+      .references(() => user.id),
+    fitRationale: text("fit_rationale").notNull(),
+    ask: text("ask").notNull(),
+    contactRole: text("contact_role").notNull(),
+    targetPersonId: uuid("target_person_id").references(() => person.id, {
+      onDelete: "set null",
+    }),
+    nextAction: text("next_action").notNull(),
+    approachMode: text("approach_mode").notNull(),
+    pathId: text("path_id"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    check(
+      "opportunity_review_approach",
+      sql`${t.approachMode} IN ('cold','introduction')`,
+    ),
+  ],
+);
+
+export const opportunityEvent = pgTable(
+  "opportunity_event",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => opportunity.id, { onDelete: "cascade" }),
+    action: text("action").notNull(),
+    fromState: text("from_state").notNull(),
+    toState: text("to_state").notNull(),
+    reason: text("reason").notNull().default(""),
+    source: text("source").notNull().default(""),
+    occurredDate: date("occurred_date").notNull(),
+    partnershipId: uuid("partnership_id").references(() => partnership.id),
+    reviewId: uuid("review_id").references(() => opportunityReview.id),
+    recordedBy: uuid("recorded_by")
+      .notNull()
+      .references(() => user.id),
+    requestId: uuid("request_id").notNull(),
+    requestHash: text("request_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("opportunity_event_request").on(t.organizationId, t.requestId),
+    index("opportunity_event_history").on(
+      t.organizationId,
+      t.opportunityId,
+      t.createdAt,
+    ),
+    check(
+      "opportunity_event_action",
+      sql`${t.action} IN ('transition','reopen','agreement')`,
+    ),
+    check(
+      "opportunity_event_states",
+      sql`${t.fromState} IN ('suggested','shortlisted','pursuing','agreed','declined','archived') AND ${t.toState} IN ('suggested','shortlisted','pursuing','agreed','declined','archived')`,
+    ),
+    check(
+      "opportunity_event_closed_reason",
+      sql`${t.toState} NOT IN ('declined','archived') OR length(trim(${t.reason})) > 0`,
+    ),
+    check(
+      "opportunity_event_agreement",
+      sql`${t.action} <> 'agreement' OR (${t.toState}='agreed' AND ${t.partnershipId} IS NOT NULL AND length(trim(${t.source})) > 0)`,
+    ),
+  ],
+);
+
+// AI results are suggestions only. They never replace assessments or manualBrief.
+export const aiConfiguration = pgTable(
+  "ai_configuration",
+  {
+    organizationId: uuid("organization_id")
+      .primaryKey()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    enabled: boolean("enabled").notNull().default(false),
+    provider: text("provider").notNull().default("openai"),
+    model: text("model").notNull().default(""),
+    updatedBy: uuid("updated_by")
+      .notNull()
+      .references(() => user.id),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [check("ai_provider_allowed", sql`${t.provider} = 'openai'`)],
+);
+export const aiRun = pgTable(
+  "ai_run",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => opportunity.id, { onDelete: "cascade" }),
+    assessmentId: uuid("assessment_id")
+      .notNull()
+      .references(() => assessment.id, { onDelete: "cascade" }),
+    requestedBy: uuid("requested_by")
+      .notNull()
+      .references(() => user.id),
+    inputRevision: integer("input_revision").notNull(),
+    idempotencyKey: uuid("idempotency_key").notNull(),
+    requestFingerprint: text("request_fingerprint").notNull(),
+    lastActionKey: uuid("last_action_key").notNull(),
+    lastActionFingerprint: text("last_action_fingerprint").notNull(),
+    status: text("status").notNull().default("running"),
+    attempt: integer("attempt").notNull().default(1),
+    packet: jsonb("packet")
+      .$type<import("../ai/contracts").AiPacket>()
+      .notNull(),
+    referenceMap: jsonb("reference_map")
+      .$type<import("../ai/contracts").ReferenceMap>()
+      .notNull(),
+    model: text("model").notNull(),
+    configRevision: timestamp("config_revision", {
+      withTimezone: true,
+    }).notNull(),
+    draft: jsonb("draft").$type<import("../ai/contracts").AiDraft>(),
+    errorCategory: text("error_category"),
+    startedAt: timestamp("started_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ai_run_idempotency").on(t.organizationId, t.idempotencyKey),
+    uniqueIndex("ai_run_one_live_call")
+      .on(t.organizationId)
+      .where(sql`${t.status} = 'running'`),
+    check(
+      "ai_run_status",
+      sql`${t.status} IN ('running','completed','failed','interrupted')`,
+    ),
+    check("ai_run_attempt", sql`${t.attempt} BETWEEN 1 AND 2`),
+    check(
+      "ai_run_finish",
+      sql`(${t.status}='running' AND ${t.finishedAt} IS NULL) OR (${t.status}<>'running' AND ${t.finishedAt} IS NOT NULL)`,
+    ),
+  ],
+);
+
+// Operational metadata only; never store deleted text, preview tokens or evidence.
+export const auditEvent = pgTable(
+  "audit_event",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    actorId: uuid("actor_id")
+      .notNull()
+      .references(() => user.id),
+    action: text("action").notNull(),
+    targetId: uuid("target_id"),
+    requestId: uuid("request_id").notNull(),
+    counts: jsonb("counts")
+      .$type<Record<string, number>>()
+      .notNull()
+      .default({}),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("audit_event_request").on(t.organizationId, t.requestId),
+    check(
+      "audit_event_action",
+      sql`${t.action} IN ('person_deleted','exported','retention_purged')`,
+    ),
+  ],
+);
+
+// This sentinel is created only by the guarded isolated-demo CLI.
+export const demoInstallation = pgTable(
+  "demo_installation",
+  {
+    id: integer("id").primaryKey().default(1),
+    datasetVersion: text("dataset_version").notNull(),
+    organizationId: uuid("organization_id").references(() => organization.id, {
+      onDelete: "set null",
+    }),
+    state: text("state").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    check("demo_singleton", sql`${t.id}=1`),
+    check("demo_state", sql`${t.state} IN ('seeding','ready')`),
+  ],
+);

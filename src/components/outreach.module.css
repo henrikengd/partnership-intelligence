@@ -1,0 +1,20 @@
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
+  gap: 20px;
+}
+.pipeline h2 {
+  text-transform: capitalize;
+}
+.pipeline article {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.pipeline a {
+  display: inline-block;
+  margin-top: 8px;
+}
+
+.detail {
+  align-items: start;
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "relationship" ADD CONSTRAINT "relationship_previous_state" CHECK ("relationship"."kind" <> 'previously_worked_at' OR "relationship"."state"='ended');

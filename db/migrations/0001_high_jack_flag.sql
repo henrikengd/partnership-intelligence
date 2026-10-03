@@ -1,0 +1,2 @@
+ALTER TABLE "organization" ADD CONSTRAINT "organization_single_installation" CHECK ("organization"."singleton_key" = 1);--> statement-breakpoint
+ALTER TABLE "organization" ADD CONSTRAINT "organization_team_size_nonnegative" CHECK ("organization"."team_size" IS NULL OR "organization"."team_size" >= 0);
