@@ -14,7 +14,7 @@ The original planning workspace remains untouched and its local main is unborn. 
 
 ## Current assignment and blockers
 
-Current checked application: `7f6dbb460ca52b35f3ff2de7755a58cba045af0e`. T-02 through T-06 and T-08 are integrated, verified and closed. T-07 is reopened for the confirmed AI Settings response race; its bounded worker repair is pending T-09 integration. T-09 is finishing demo/accessibility verification in its assigned worktree. T-10 remains blocked until T-09 integration is verified. T-01 remains open only for actual remote CI. No PR exists yet.
+Current checked application: `8c1bc0dc6e4f0574cf5057b4936e391f5f961ed4`. T-02 through T-09 are integrated, verified and closed, including the repaired AI Settings race. T-10 is now eligible for operating/restore acceptance. T-01 remains open only for actual remote CI. No PR exists yet.
 
 ## Historical implementation checkpoints
 
@@ -40,7 +40,7 @@ T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.
 
 ## Next action
 
-Integrate T-09 demo/polish without replaying its adopted 0008 metadata, verify the combined application, then release T-10 operating/restore work. Only root updates the integration branch and tracker. Preserve #2 pending actual final CI and parent #1 as open until PR merge.
+Complete T-10 fresh Compose, recovery, backup/restore, operating docs and release evidence, then assign fresh complete-feature and Standards/Spec reviews before one PR. Only root updates the integration branch and tracker. Preserve #2 pending actual final CI and parent #1 as open until PR merge.
 
 ## Infrastructure and tracker reconciliation
 
@@ -144,3 +144,10 @@ Read-only reviewer `/root/test_runtime` confirms exact integrated composition an
 
 
 T-07/#8 is reopened after T-09 browser verification confirmed that a late initial Settings response can overwrite edited model input. The worker repair includes abort cleanup and an edited/saved guard. Its deterministic delayed-response regression passes fixed code and fails the original component. Root will reclose #8 only after integrated verification; no service or permission contract change is proposed. T-09 continues the assigned repair and final checks.
+
+
+## T-09 and AI Settings repair integrated checkpoint
+
+Worker `84750eb9236fa8cdd9e2f0d06aba0ed27023bd05` integrated cleanly as `8c1bc0dc6e4f0574cf5057b4936e391f5f961ed4`; its adopted privacy schema was not replayed. The no-assessment fallback and actual administrator Settings privacy mount remain. Coordinator lint/types/build, 33 unit, all 89 PostgreSQL and all 17 Chromium tests pass. Browser coverage includes the delayed initial AI Settings response, actual privacy flow, all ten main screens at 390px, keyboard route/text/source disclosures, labelled validation focus, onboarding/import, selected alternative route, outreach and outcomes. Fictional rendered screenshots were inspected.
+
+Coordinator independently reset the dedicated restricted `pi_demo` companion through the no-key CLI and read exact counts `12/6/4/3/8`, with zero AI runs. The PostgreSQL suite exercised actual pool mismatch, live/private identity preservation, concurrent CLI seeds, partial recovery and active connection refusal. Read-only reviewer `/root/test_runtime` confirms the integrated safety/repair/disclosure boundaries at this exact commit with no material finding in the bounded inspection. #8 is reclosed for the verified UI repair, #10 closes, and #11 becomes eligible. Fresh separate Compose startup is explicitly T-10 work and is not claimed by these checks.
