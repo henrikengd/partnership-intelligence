@@ -41,7 +41,10 @@ export default async function CompanyDetail({
         />
       </section>
       <p>
-        <Link href={`/graph?company=${id}`}>Open focused graph</Link>
+        <Link href={`/graph?company=${id}`}>Open focused graph</Link> ·{" "}
+        <Link href={`/companies/${id}/history`}>
+          Partnership and outreach history
+        </Link>
       </p>
     </>
   );

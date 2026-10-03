@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { requirePageActor } from "@/server/auth/page";
 import { DomainError } from "@/server/errors";
 import { getOpportunityDetail } from "@/modules/opportunities/service";
+import { LifecycleControls } from "@/components/lifecycle-controls";
+import { OutreachActivities } from "@/components/outreach-activities";
+import { getLifecycleDetail } from "@/modules/outreach/lifecycle";
 import { ReviewedActionPlan } from "@/components/reviewed-action-plan";
 import { OpportunityReviewForm } from "@/components/opportunity-review";
 import { rubric } from "@/modules/opportunities/scoring";
@@ -11,7 +14,6 @@ import { RelationshipPaths } from "@/components/relationship-paths";
 import { companyPaths } from "@/modules/network/service";
 import { PathGraph } from "@/components/path-graph";
 import {
-  ActivityForm,
   BriefEditor,
   FactorsEditor,
   Regenerate,
@@ -32,12 +34,16 @@ export default async function OpportunityDetail({
     throw e;
   }
   const { record, latest, brief, data, score, versions, activities } = detail;
+  const lifecycle = await getLifecycleDetail(requestHeaders, id);
   const company = data.companies.find((c) => c.id === record.companyId)!;
   const need = data.needs.find((n) => n.id === record.needId)!;
   const stale = record.inputRevision !== latest.inputRevision;
   return (
     <>
-      <Link href="/opportunities">← Opportunities</Link>
+      <p>
+        <Link href="/opportunities">← Opportunities</Link> ·{" "}
+        <Link href={`/pipeline/${id}`}>Open outreach pipeline</Link>
+      </p>
       <div className="detail-heading">
         <div>
           <span className="eyebrow">
@@ -310,6 +316,7 @@ export default async function OpportunityDetail({
           </section>
         </div>
         <aside className="stack">
+          <LifecycleControls detail={lifecycle} />
           <OpportunityReviewForm
             id={id}
             brief={brief}
@@ -349,14 +356,12 @@ export default async function OpportunityDetail({
               owners={data.owners}
             />
           </section>
-          <section className="card">
-            <h2>Record the next action</h2>
-            <ActivityForm
-              opportunityId={id}
-              people={data.people}
-              activities={activities}
-            />
-          </section>
+          <OutreachActivities
+            opportunityId={id}
+            people={data.people}
+            activities={activities}
+            today={lifecycle.today}
+          />
         </aside>
       </div>
     </>

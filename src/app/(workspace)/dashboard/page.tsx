@@ -104,6 +104,9 @@ export default async function Dashboard() {
         </section>
         <section className="card">
           <h2>Due and overdue follow-ups</h2>
+          <p>
+            <Link href="/pipeline">Open the outreach pipeline</Link>
+          </p>
           <p className="muted small">
             Calendar date {due.today} in {organization.timezone}.
           </p>

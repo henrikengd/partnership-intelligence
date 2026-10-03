@@ -143,24 +143,28 @@ test("invited editor enters a machining opportunity and records a completed intr
     .click();
   await expect(page.getByText(/Brief and owner saved/)).toBeVisible();
   await page
-    .getByLabel("Target person")
+    .getByLabel("Recorded target person")
     .selectOption({ label: "Anna Example" });
   await page
-    .getByLabel("Action description")
+    .getByLabel("Recorded action description")
     .fill("Ask Anna whether she is willing to introduce our workshop team.");
-  await page.getByLabel("Follow-up date", { exact: true }).fill("2026-01-01");
-  await page.getByRole("button", { name: "Plan action", exact: true }).click();
-  await expect(
-    page.getByText("Planned, not completed", { exact: true }),
-  ).toBeVisible();
-  await expect(page.getByText("Completed action", { exact: true })).toHaveCount(
-    0,
-  );
   await page
-    .getByRole("button", { name: "Mark completed", exact: true })
+    .getByLabel("Next follow-up date", { exact: true })
+    .fill("2026-01-01");
+  await page
+    .getByRole("button", { name: "Record planned action", exact: true })
     .click();
   await expect(
-    page.getByText("Completed action", { exact: true }),
+    page.getByText("Planned, not completed · introduction", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Completed action · introduction", { exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Mark action completed", exact: true })
+    .click();
+  await expect(
+    page.getByText("Completed action · introduction", { exact: true }),
   ).toBeVisible();
   await page
     .getByRole("button", {
@@ -173,7 +177,7 @@ test("invited editor enters a machining opportunity and records a completed intr
     "Machine ten defined workshop fixtures from supplied drawings.",
   );
   await expect(
-    page.getByText("Completed action", { exact: true }),
+    page.getByText("Completed action · introduction", { exact: true }),
   ).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.screenshot({
