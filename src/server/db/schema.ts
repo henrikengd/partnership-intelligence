@@ -103,6 +103,7 @@ export const organization = pgTable(
     location: text("location").notNull().default(""),
     teamSize: integer("team_size"),
     timezone: text("timezone").notNull().default("UTC"),
+    privacyRevision: integer("privacy_revision").notNull().default(1),
     ...dates,
   },
   (t) => [
@@ -814,6 +815,37 @@ export const aiRun = pgTable(
     check(
       "ai_run_finish",
       sql`(${t.status}='running' AND ${t.finishedAt} IS NULL) OR (${t.status}<>'running' AND ${t.finishedAt} IS NOT NULL)`,
+    ),
+  ],
+);
+
+// Operational metadata only; never store deleted text, preview tokens or evidence.
+export const auditEvent = pgTable(
+  "audit_event",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    actorId: uuid("actor_id")
+      .notNull()
+      .references(() => user.id),
+    action: text("action").notNull(),
+    targetId: uuid("target_id"),
+    requestId: uuid("request_id").notNull(),
+    counts: jsonb("counts")
+      .$type<Record<string, number>>()
+      .notNull()
+      .default({}),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("audit_event_request").on(t.organizationId, t.requestId),
+    check(
+      "audit_event_action",
+      sql`${t.action} IN ('person_deleted','exported','retention_purged')`,
     ),
   ],
 );
