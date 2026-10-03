@@ -1,0 +1,24 @@
+.preview {
+  display: block;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  margin-block: 1rem;
+}
+.preview table {
+  width: 100%;
+}
+.preview form {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+.preview label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+.preview input {
+  width: auto;
+  margin-top: 0.25rem;
+}

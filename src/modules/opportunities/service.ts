@@ -1,3 +1,4 @@
+import { lockWorkspace } from "../privacy/lock";
 import { and, eq, desc, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
@@ -276,6 +277,7 @@ export async function editOpportunity(
   const context = await workspaceContext(headers);
   const { ownerId, ...manualBrief } = manualInput.parse(raw);
   return db.transaction(async (tx) => {
+    await lockWorkspace(tx, context);
     await assertReference(tx, context.organization.id, "opportunities", id);
     if (
       ownerId &&
@@ -312,6 +314,7 @@ export async function reviewFactors(
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
     const [record] = await tx
       .select()
       .from(opportunity)

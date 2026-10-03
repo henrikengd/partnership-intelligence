@@ -1,3 +1,5 @@
+import { OpportunityWithoutAssessment } from "@/components/opportunity-without-assessment";
+import { DomainError } from "@/server/errors";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { requirePageActor } from "@/server/auth/page";
@@ -16,7 +18,14 @@ export default async function Page({
   await requirePageActor(h);
   const { id } = await params;
   const detail = await getLifecycleDetail(h, id);
-  const op = await getOpportunityDetail(h, id);
+  let op;
+  try {
+    op = await getOpportunityDetail(h, id);
+  } catch (e) {
+    if (e instanceof DomainError && e.code === "ASSESSMENT_MISSING")
+      return <OpportunityWithoutAssessment requestHeaders={h} id={id} />;
+    throw e;
+  }
   return (
     <>
       <Link href="/pipeline">← Pipeline</Link>

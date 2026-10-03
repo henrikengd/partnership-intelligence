@@ -1,6 +1,7 @@
+import { DomainError } from "./errors";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
-import { db, organization } from "./db";
+import { eq, sql } from "drizzle-orm";
+import { db, organization, opportunity } from "./db";
 import { requireActor, requireAdmin } from "./auth/access";
 export const organizationInput = z.object({
   name: z.string().trim().min(1).max(160),
@@ -35,14 +36,42 @@ export async function saveOrganization(
 ) {
   await requireAdmin(headers);
   const input = organizationInput.parse(raw);
-  const [record] = await db
-    .insert(organization)
-    .values(input)
-    .onConflictDoUpdate({
-      target: organization.singletonKey,
-      set: { ...input, updatedAt: new Date() },
-    })
-    .returning();
+  const expected = await db.query.organization.findFirst();
+  const record = await db.transaction(async (tx) => {
+    const current = expected
+      ? (
+          await tx
+            .select()
+            .from(organization)
+            .where(eq(organization.id, expected.id))
+            .for("update")
+        )[0]
+      : null;
+    if (expected && current?.privacyRevision !== expected.privacyRevision)
+      throw new DomainError(
+        "PRIVACY_CHANGED",
+        "Private data changed. Refresh before saving this profile.",
+        409,
+      );
+    const [record] = await tx
+      .insert(organization)
+      .values(input)
+      .onConflictDoUpdate({
+        target: organization.singletonKey,
+        set: { ...input, updatedAt: new Date() },
+      })
+      .returning();
+    if (current)
+      await tx
+        .update(opportunity)
+        .set({
+          reviewState: "needs_review",
+          inputRevision: sql`${opportunity.inputRevision}+1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(opportunity.organizationId, current.id));
+    return record;
+  });
   return record;
 }
 export async function installationConfigured() {

@@ -1,3 +1,4 @@
+import { lockWorkspace } from "../privacy/lock";
 import { createHash } from "node:crypto";
 import { and, eq, desc } from "drizzle-orm";
 import { z } from "zod";
@@ -65,6 +66,7 @@ export async function transitionOpportunity(
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
     const [record] = await tx
       .select()
       .from(opportunity)

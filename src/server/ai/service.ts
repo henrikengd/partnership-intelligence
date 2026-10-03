@@ -1,7 +1,15 @@
+import { lockWorkspace } from "../../modules/privacy/lock";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { and, desc, eq } from "drizzle-orm";
-import { db, aiConfiguration, aiRun, organization } from "../db";
+import {
+  db,
+  aiConfiguration,
+  aiRun,
+  organization,
+  opportunity,
+  assessment,
+} from "../db";
 import { requireAdmin } from "../auth/access";
 import { workspaceContext } from "../../modules/records/service";
 import { getOpportunityDetail } from "../../modules/opportunities/service";
@@ -228,6 +236,26 @@ async function submit(
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
+    const [lockedOpportunity] = await tx
+      .select()
+      .from(opportunity)
+      .where(eq(opportunity.id, input.opportunityId))
+      .for("update");
+    const latestAssessment = await tx.query.assessment.findFirst({
+      where: eq(assessment.opportunityId, input.opportunityId),
+      orderBy: (a, { desc }) => desc(a.version),
+    });
+    if (
+      !lockedOpportunity ||
+      lockedOpportunity.inputRevision !== fresh.detail.record.inputRevision ||
+      latestAssessment?.id !== fresh.detail.latest.id
+    )
+      throw new DomainError(
+        "STALE_CONTEXT",
+        "Recorded inputs changed. Review a fresh packet.",
+        409,
+      );
     const config = await tx.query.aiConfiguration.findFirst({
       where: eq(aiConfiguration.organizationId, context.organization.id),
     });
@@ -349,6 +377,58 @@ async function submit(
     eq(aiRun.status, "running"),
     eq(aiRun.attempt, run.attempt),
   );
+  async function finish(values: {
+    status: string;
+    draft?: typeof aiRun.$inferSelect.draft;
+    errorCategory?: string;
+    finishedAt: Date;
+  }) {
+    await db.transaction(async (tx) => {
+      await tx
+        .select()
+        .from(organization)
+        .where(eq(organization.id, run.organizationId))
+        .for("update");
+      const [op] = await tx
+        .select()
+        .from(opportunity)
+        .where(eq(opportunity.id, run.opportunityId))
+        .for("update");
+      const [present] = await tx
+        .select()
+        .from(aiRun)
+        .where(eq(aiRun.id, run.id))
+        .for("update");
+      if (
+        !present ||
+        present.status !== "running" ||
+        present.attempt !== run.attempt
+      )
+        return;
+      if (values.status === "completed") {
+        const latest = await tx.query.assessment.findFirst({
+          where: eq(assessment.opportunityId, run.opportunityId),
+          orderBy: (a, { desc }) => desc(a.version),
+        });
+        const config = await tx.query.aiConfiguration.findFirst({
+          where: eq(aiConfiguration.organizationId, run.organizationId),
+        });
+        if (
+          !op ||
+          op.inputRevision !== run.inputRevision ||
+          latest?.id !== run.assessmentId ||
+          !config?.enabled ||
+          config.updatedAt.getTime() !== run.configRevision.getTime()
+        )
+          values = {
+            status: "failed",
+            errorCategory: "INPUT_CHANGED",
+            finishedAt: new Date(),
+          };
+      }
+      await tx.update(aiRun).set(values).where(condition);
+    });
+  }
   try {
     const assertLive = async () => {
       await workspaceContext(headers);
@@ -383,28 +463,24 @@ async function submit(
     );
     const latest = await assertLive();
     const draft = validateDraft(output, packet, latest.detail.data.people);
-    await db
-      .update(aiRun)
-      .set({ status: "completed", draft, finishedAt: new Date() })
-      .where(condition);
+    await finish({ status: "completed", draft, finishedAt: new Date() });
   } catch (error) {
-    await db
-      .update(aiRun)
-      .set({
-        status: "failed",
-        errorCategory:
-          error instanceof AiError
-            ? error.category
-            : error instanceof DomainError
-              ? error.code
-              : "PROVIDER_FAILED",
-        finishedAt: new Date(),
-      })
-      .where(condition);
+    await finish({
+      status: "failed",
+      errorCategory:
+        error instanceof AiError
+          ? error.category
+          : error instanceof DomainError
+            ? error.code
+            : "PROVIDER_FAILED",
+      finishedAt: new Date(),
+    });
   }
   const [result] = await db
     .select({ id: aiRun.id, status: aiRun.status })
     .from(aiRun)
     .where(eq(aiRun.id, run.id));
-  return result;
+  return (
+    result ?? { id: run.id, status: "failed", errorCategory: "DATA_DELETED" }
+  );
 }

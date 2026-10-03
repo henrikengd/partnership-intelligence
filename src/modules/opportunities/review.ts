@@ -1,3 +1,4 @@
+import { lockWorkspace } from "../privacy/lock";
 import { z } from "zod";
 import { and, eq, desc } from "drizzle-orm";
 import {
@@ -56,6 +57,7 @@ export async function reviewOpportunity(
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
     const [record] = await tx
       .select()
       .from(opportunity)
@@ -279,6 +281,7 @@ export async function startPursuing(headers: Headers, id: string) {
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
     const [record] = await tx
       .select()
       .from(opportunity)

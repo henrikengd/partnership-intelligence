@@ -60,7 +60,9 @@ export async function readJson(request: Request, maximumBytes = 16_384) {
 }
 export async function jsonRoute(action: () => Promise<unknown>) {
   try {
-    return Response.json(await action(), {
+    const result = await action();
+    if (result instanceof Response) return result;
+    return Response.json(result, {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {

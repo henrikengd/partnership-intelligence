@@ -7,3 +7,12 @@ private
 playwright-report
 test-results
 *.tsbuildinfo
+
+.private
+.local
+uploads
+exports
+backups
+*.log
+.DS_Store
+coverage

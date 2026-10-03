@@ -1,3 +1,4 @@
+import { lockWorkspace } from "../privacy/lock";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { and, eq, desc, sql } from "drizzle-orm";
@@ -68,6 +69,7 @@ export async function saveIncentive(headers: Headers, raw: unknown) {
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
     for (const [kind, id] of [
       ["needs", input.needId],
       ["companies", input.companyId],
@@ -107,6 +109,7 @@ async function executeRun(
         .from(organization)
         .where(eq(organization.id, context.organization.id))
         .for("update");
+      await lockWorkspace(tx, context);
       const [run] = await tx
         .select()
         .from(generationRun)
@@ -156,6 +159,7 @@ async function executeRun(
             (h) =>
               h.companyId === companyId &&
               h.outcome === "in_discussion" &&
+              !run.selection.refreshOpportunityId &&
               !run.selection.allowOngoingDiscussion,
           )
         ) {
@@ -231,6 +235,7 @@ export async function startGenerationRun(headers: Headers, raw: unknown) {
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
     const requestFingerprint = fingerprint({
       ...input,
       companyIds: input.companyIds ? [...input.companyIds].sort() : null,
@@ -372,6 +377,7 @@ export async function retryGenerationRun(headers: Headers, id: string) {
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
     const [run] = await tx
       .select()
       .from(generationRun)

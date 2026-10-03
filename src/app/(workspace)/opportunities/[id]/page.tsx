@@ -1,3 +1,4 @@
+import { OpportunityWithoutAssessment } from "@/components/opportunity-without-assessment";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -32,6 +33,10 @@ export default async function OpportunityDetail({
   try {
     detail = await getOpportunityDetail(requestHeaders, id);
   } catch (e) {
+    if (e instanceof DomainError && e.code === "ASSESSMENT_MISSING")
+      return (
+        <OpportunityWithoutAssessment requestHeaders={requestHeaders} id={id} />
+      );
     if (e instanceof DomainError && e.status === 404) notFound();
     throw e;
   }

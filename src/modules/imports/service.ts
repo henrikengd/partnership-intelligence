@@ -1,3 +1,4 @@
+import { lockWorkspace } from "../privacy/lock";
 import { and, eq, lt } from "drizzle-orm";
 import { z } from "zod";
 import { db, importBatch, organization } from "../../server/db";
@@ -102,85 +103,90 @@ export async function previewImport(
 ) {
   const context = await workspaceContext(headers);
   await purgeExpiredImports();
-  const { headers: columns, records } = parseCsv(bytes);
-  if (Object.keys(mapping).some((k) => !templates[kind].includes(k)))
-    throw new DomainError(
-      "INVALID_MAPPING",
-      "Map only supported template fields.",
-    );
-  const data = await readWorkspaceData(db, context);
-  const seen = new Set<string>();
-  const seenNames = new Set<string>();
-  const rows: ImportRow[] = records.map((values, index) => {
-    const normalized = normalize(
-      kind,
-      mapRow(kind, columns, values, mapping),
-      data,
-    );
-    if (values.length !== columns.length)
-      normalized.errors.push(
-        "Row has a different number of columns than the header.",
+  return db.transaction(async (tx) => {
+    await lockWorkspace(tx, context);
+    const { headers: columns, records } = parseCsv(bytes);
+    if (Object.keys(mapping).some((k) => !templates[kind].includes(k)))
+      throw new DomainError(
+        "INVALID_MAPPING",
+        "Map only supported template fields.",
       );
-    const keys = [
-      normalized.input.sourceId ? `source:${normalized.input.sourceId}` : null,
-      kind === "people" && normalized.input.email
-        ? `email:${normalized.input.email}`
-        : null,
-      kind === "companies" && normalized.input.domain
-        ? `domain:${normalized.input.domain}`
-        : null,
-    ].filter((key): key is string => key !== null);
-    if (keys.some((key) => seen.has(key)))
-      normalized.errors.push(
-        "Repeated source ID or exact identity in this file. Exclude the repeated row or correct the file.",
+    const data = await readWorkspaceData(tx, context);
+    const seen = new Set<string>();
+    const seenNames = new Set<string>();
+    const rows: ImportRow[] = records.map((values, index) => {
+      const normalized = normalize(
+        kind,
+        mapRow(kind, columns, values, mapping),
+        data,
       );
-    keys.forEach((key) => seen.add(key));
-    const matches = candidates(kind, normalized.input, data);
-    const sourceMatch = matches.find((m) => m.reason === "source ID");
-    if (sourceMatch && matches.some((m) => m.id !== sourceMatch.id))
-      normalized.errors.push(
-        "The source ID and exact email/domain identify different saved records. Correct the row or explicitly exclude it.",
-      );
-    const name = normalized.input.name;
-    const sameName =
-      name &&
-      (seenNames.has(String(name)) ||
-        data[kind].some(
-          (r) =>
-            "name" in r &&
-            r.name === name &&
-            !matches.some((m) => m.id === r.id),
-        ));
-    if (name) seenNames.add(String(name));
-    return {
-      row: index + 2,
-      ...normalized,
-      candidates: matches,
-      warnings: [
-        ...(sameName
-          ? [
-              "Another record has the same name. Names never establish identity; create a separate record or correct the source ID.",
-            ]
-          : []),
-        ...(keys.length
-          ? []
-          : [
-              "No stable source ID or exact email/domain was supplied. Later reimports cannot identify this record automatically; keep the returned record mapping.",
-            ]),
-      ],
-    };
+      if (values.length !== columns.length)
+        normalized.errors.push(
+          "Row has a different number of columns than the header.",
+        );
+      const keys = [
+        normalized.input.sourceId
+          ? `source:${normalized.input.sourceId}`
+          : null,
+        kind === "people" && normalized.input.email
+          ? `email:${normalized.input.email}`
+          : null,
+        kind === "companies" && normalized.input.domain
+          ? `domain:${normalized.input.domain}`
+          : null,
+      ].filter((key): key is string => key !== null);
+      if (keys.some((key) => seen.has(key)))
+        normalized.errors.push(
+          "Repeated source ID or exact identity in this file. Exclude the repeated row or correct the file.",
+        );
+      keys.forEach((key) => seen.add(key));
+      const matches = candidates(kind, normalized.input, data);
+      const sourceMatch = matches.find((m) => m.reason === "source ID");
+      if (sourceMatch && matches.some((m) => m.id !== sourceMatch.id))
+        normalized.errors.push(
+          "The source ID and exact email/domain identify different saved records. Correct the row or explicitly exclude it.",
+        );
+      const name = normalized.input.name;
+      const sameName =
+        name &&
+        (seenNames.has(String(name)) ||
+          data[kind].some(
+            (r) =>
+              "name" in r &&
+              r.name === name &&
+              !matches.some((m) => m.id === r.id),
+          ));
+      if (name) seenNames.add(String(name));
+      return {
+        row: index + 2,
+        ...normalized,
+        candidates: matches,
+        warnings: [
+          ...(sameName
+            ? [
+                "Another record has the same name. Names never establish identity; create a separate record or correct the source ID.",
+              ]
+            : []),
+          ...(keys.length
+            ? []
+            : [
+                "No stable source ID or exact email/domain was supplied. Later reimports cannot identify this record automatically; keep the returned record mapping.",
+              ]),
+        ],
+      };
+    });
+    const [batch] = await tx
+      .insert(importBatch)
+      .values({
+        organizationId: context.organization.id,
+        recordedBy: context.actor.id,
+        kind,
+        rows,
+        expiresAt: new Date(Date.now() + 3600000),
+      })
+      .returning();
+    return batch;
   });
-  const [batch] = await db
-    .insert(importBatch)
-    .values({
-      organizationId: context.organization.id,
-      recordedBy: context.actor.id,
-      kind,
-      rows,
-      expiresAt: new Date(Date.now() + 3600000),
-    })
-    .returning();
-  return batch;
 }
 export async function getImport(headers: Headers, id: string) {
   const context = await workspaceContext(headers);
@@ -228,6 +234,7 @@ export async function commitImport(headers: Headers, id: string, raw: unknown) {
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
     const [batch] = await tx
       .select()
       .from(importBatch)

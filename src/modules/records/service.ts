@@ -1,3 +1,4 @@
+import { lockWorkspace } from "../privacy/lock";
 import { and, eq, sql } from "drizzle-orm";
 import {
   db,
@@ -180,6 +181,7 @@ export async function saveRecordInTransaction(
   kind: RecordKind,
   raw: unknown,
 ) {
+  await lockWorkspace(tx, { actor, organization: org });
   const base = {
     organizationId: org.id,
     recordedBy: actor.id,

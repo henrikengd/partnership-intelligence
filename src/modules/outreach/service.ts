@@ -1,3 +1,4 @@
+import { lockWorkspace } from "../privacy/lock";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, activity, opportunity, user, organization } from "../../server/db";
@@ -34,6 +35,7 @@ export async function saveActivity(headers: Headers, raw: unknown) {
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
     const [op] = await tx
       .select()
       .from(opportunity)
@@ -218,6 +220,7 @@ export async function updateFollowUp(
       .from(organization)
       .where(eq(organization.id, context.organization.id))
       .for("update");
+    await lockWorkspace(tx, context);
     const initial = await tx.query.activity.findFirst({
       where: and(
         eq(activity.id, id),
