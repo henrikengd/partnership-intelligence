@@ -14,11 +14,13 @@ The original planning workspace remains untouched and its local main is unborn. 
 
 ## Current assignment and blockers
 
-Last complete local check: application `8c1bc0dc6e4f0574cf5057b4936e391f5f961ed4`, unit33/PG89/Chromium17 plus lint/types/build. Independent preflight at this application and docs74175fa confirmed five P2 defects. T-03/#4, T-04/#5, T-05/#6 and T-07/#8 are reopened. T-02, T-06, T-08 and T-09 remain closed. T-10 continues unaffected fresh runtime/restore work, with a final container smoke required after repairs. T-01 remains open for actual remote CI. No PR exists yet.
+Final reviewed application/helper source: `9a549e999121485a62cb9e88da2bfb1c1bb4d6e1`. Lint/types/build, unit38 and real PostgreSQL94 pass. Full Chromium20 passed at96d83eb; all five affected AI workflows pass again at9a549e9 after its only later code change. All eight material review findings are repaired and independently rechecked. T-02 through T-09 are closed. T-01/#2 and T-10/#11 await actual current-PR CI only. No PR exists at this pre-publication checkpoint; parent#1 remains open until merge.
 
-Graph worker owns bounded ranked traversal, exact active regeneration past closed history, and incentive-aware onboarding in managed pi-review-paths/codex/pi-review-paths from74175fa, database5544/app3104. Coordinator owns AI actionable-prose validation and stale brief/factor remounting in managed pi-review-ai/codex/pi-review-ai from74175fa, database5541/app3103. No schema changes are planned. Non-implementing reviewer test_runtime reproduced all five findings, released its temporary database5540/app3100 reservations, and will inspect the repairs. T-10 foundation owns pi-t10-runtime and separate fresh Compose projects pi-release3110/pi-release-restore3111/pi-release-demo3115. Only root integrates and updates tracker.
+Fresh complete correctness, Standards and Spec reviews have no remaining material issue at9a549e9. Two nonblocking duplication judgments remain, separately recorded in notes/final-review.md. Unknown new occurrence dates are rejected; raw default AI need/source narrative stays local, uncertain named titles are omitted and explicit sanitized preview edits are sent exactly. Each new guard regression failed original source and passed its repair. An intermediate integrated browser run exposed a technical-acronym false positive; its repair and positive/negative control are checked.
 
-Preflight evidence: graph fixture allocated160,000 snapshots from800 relationships; active refresh incorrectly required creation acknowledgement; onboarding ignored stored companyNeedIncentives; no-route AI drafts accepted two invented named-contact actions; actual Chromium readiness refresh retained stale ask/fit and an owner-only save overwrote the reviewed ask. Reproductions are saved in /private/tmp/pi-review-preflight-evidence.md and associated scripts. Two suspected date findings were withdrawn because input schemas prohibit their scenarios and are not outstanding findings. This preflight is not final exact-SHA acceptance.
+T-10 final operating proof is integrated as77722a7 from worker5c78812. Actual fresh Compose setup/restart/account recovery, guarded no-key demo reset, artificial interruption with explicit fake-provider retry, logging suppression and full31-table/55-row backup/restore equality passed. The final9a549e9 image was rebuilt and all159 running source files matched in each private/restored/demo app. Actual final browser flows passed, domain digests stayed unchanged and all six release containers are stopped, with private volumes/evidence retained. Source/helpers/runbooks were inspected by the non-implementing reviewer; paid provider/public TLS/deployment are not claimed.
+
+Only root updates integration/tracker/PR. Original planning workspace remains untouched. T-01 through T-09 and both repair worktrees are archived or queued for managed archival, with code/evidence integrated and needed fictional logs/screenshots outside Git. The clean runtime worker can archive after this final evidence integration. Integration remains attached for user review.
 
 ## Historical implementation checkpoints
 
@@ -44,7 +46,7 @@ T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.
 
 ## Next action
 
-Complete T-10 fresh Compose, recovery, backup/restore, operating docs and release evidence, then assign fresh complete-feature and Standards/Spec reviews before one PR. Only root updates the integration branch and tracker. Preserve #2 pending actual final CI and parent #1 as open until PR merge.
+Publish the single feature PR as draft, verify actual current-commit CI, then close #2/#11 with remote evidence and mark the PR ready. Check remote HEAD, merge conflicts, draft state and repository rules. Keep parent#1 open until merge; no merge or deployment is authorized.
 
 ## Infrastructure and tracker reconciliation
 
@@ -167,3 +169,8 @@ The clean T-08 and T-09 worker checkouts were queued for managed archival after 
 ## Release dependency reconciliation
 
 Current live npm audit changed on the unchanged lockfile after GHSA-vfj7-8cjw-p6xm was reviewed on October2. It reports five high development dependency entries representing one braces<=3.0.3 recursion advisory via Next.js ESLint glob tooling. Official advisory says no patched version; current npm registry latest is3.0.3. Production-only audit reports zero advisories. No untrusted application/import/AI data enters this tooling path. Preserve supported pinned versions instead of the proposed forced eslint-config-next downgrade; SECURITY.md records the bounded tooling exposure. Earlier zero-all-dependency audit snapshots do not describe current state.
+
+
+## Final application review and operating checkpoint
+
+Source9a549e9 integrates worker path/refresh/readiness repairs asfcd8908/4f621c4/dada212, coordinator AI/editor repairs as078c45c/979eff7, obsolete lifecycle cleanup asae900a2, actual-date/default-context repairs as70ef5fe/96d83eb and strict professional vocabulary as9a549e9. Runtime helper507b650 and final evidence77722a7 are integrated; later release/report metadata does not alter reviewed app source. Independently reviewed source and actual checks are complete. The single PR, current remote CI and final ticket closure will be recorded in the publication checkpoint and authoritative GitHub issue comments. Earlier checkpoint results remain historical.
