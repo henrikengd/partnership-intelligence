@@ -53,7 +53,23 @@ const professionalKinds = new Set([
   "previously_worked_at",
   "interned_at",
 ]);
-function comparePaths(a: NetworkPath, b: NetworkPath) {
+type RankedPath = Pick<
+  NetworkPath,
+  | "id"
+  | "current"
+  | "willingness"
+  | "supportedConnectionCount"
+  | "reviewedConnectionCount"
+  | "weakestPersonalStrength"
+  | "personalEdgeCount"
+> & { nodeCount: number };
+type Candidate = RankedPath & {
+  membership: Row<typeof affiliation>;
+  chain: Row<typeof relationship>[];
+  personIds: string[];
+  edgeSources: (Row<typeof evidence> | undefined)[];
+};
+function comparePaths(a: RankedPath, b: RankedPath) {
   // No title establishes relevance/authority. Every terminal is explicitly connected to this company.
   // Refused routes remain visible but never displace a permitted current alternative.
   return (
@@ -63,7 +79,7 @@ function comparePaths(a: NetworkPath, b: NetworkPath) {
     b.reviewedConnectionCount - a.reviewedConnectionCount ||
     (b.weakestPersonalStrength ?? -1) - (a.weakestPersonalStrength ?? -1) ||
     Number(b.willingness === "yes") - Number(a.willingness === "yes") ||
-    a.nodes.length - b.nodes.length ||
+    a.nodeCount - b.nodeCount ||
     a.id.localeCompare(b.id)
   );
 }
@@ -81,17 +97,32 @@ export function findRelationshipPaths(input: PathInput): PathResults {
       r.companyId === input.company.id &&
       !r.targetPersonId
     ) {
-      employers.set(r.personId, [...(employers.get(r.personId) ?? []), r]);
+      const list = employers.get(r.personId);
+      if (list) list.push(r);
+      else employers.set(r.personId, [r]);
     } else if (
       ["knows", "introduced_by", "studied_with"].includes(r.kind) &&
       r.targetPersonId &&
       !r.companyId &&
       r.personId !== r.targetPersonId
     ) {
-      personal.set(r.personId, [...(personal.get(r.personId) ?? []), r]);
+      const list = personal.get(r.personId);
+      if (list) list.push(r);
+      else personal.set(r.personId, [r]);
     }
   }
-  const all: NetworkPath[] = [];
+  const best: { current: Candidate[]; historical: Candidate[] } = {
+    current: [],
+    historical: [],
+  };
+  function retain(candidate: Candidate) {
+    const paths = candidate.current ? best.current : best.historical;
+    // Both ranked pools stay bounded throughout enumeration, including dense historical periods.
+    if (paths.length === 3 && comparePaths(candidate, paths[2]) >= 0) return;
+    const index = paths.findIndex((p) => comparePaths(candidate, p) < 0);
+    paths.splice(index < 0 ? paths.length : index, 0, candidate);
+    if (paths.length > 3) paths.pop();
+  }
   // Multiple internal roles describe one root; prefer a current affiliation, then stable ID.
   const roots = new Map<string, Row<typeof affiliation>[]>();
   for (const a of input.affiliations) {
@@ -147,55 +178,9 @@ export function findRelationshipPaths(input: PathInput): PathResults {
           connections.length && connections.every((e) => e.strength !== null)
             ? Math.min(...connections.map((e) => e.strength!))
             : null;
-        const edges: NetworkPath["edges"] = [
-          {
-            id: membership.id,
-            label: membership.role,
-            state: membership.state,
-            recordedBy: membership.recordedBy,
-            startDate: membership.startDate,
-            endDate: membership.endDate,
-            evidenceIds: [],
-            strength: null,
-            willingness: "unknown",
-          },
-          ...chain.map((e, i) => ({
-            id: e.id,
-            label:
-              e.kind.replaceAll("_", " ") + (e.title ? ` · ${e.title}` : ""),
-            state: e.state,
-            recordedBy: e.recordedBy,
-            startDate: e.startDate,
-            endDate: e.endDate,
-            evidenceIds: [e.evidenceId],
-            strength: e.strength,
-            willingness: e.willingness as "yes" | "no" | "unknown",
-            willingnessDate: e.willingnessDate,
-            willingnessSource: e.willingnessSource,
-            evidenceReviewState: edgeSources[i]?.reviewState ?? "missing",
-          })),
-        ];
-        all.push({
+        retain({
           id: [membership.id, ...chain.map((e) => e.id)].join(":"),
           current,
-          nodes: [
-            {
-              id: input.organization.id,
-              kind: "organization",
-              label: input.organization.name,
-            },
-            ...personIds.map((id) => ({
-              id,
-              kind: "person" as const,
-              label: people.get(id)!.name,
-            })),
-            {
-              id: input.company.id,
-              kind: "company",
-              label: input.company.name,
-            },
-          ],
-          edges,
           willingness,
           weakestPersonalStrength,
           personalEdgeCount: connections.length,
@@ -204,14 +189,11 @@ export function findRelationshipPaths(input: PathInput): PathResults {
           reviewedConnectionCount:
             edgeSources.filter((s) => s?.reviewState === "reviewed").length /
             chain.length,
-          warning:
-            willingness === "no"
-              ? "Respect the recorded refusal. This connection is unavailable for an introduction; choose another permitted route."
-              : !current
-                ? "Historical, unknown, future, or unsupported connection. Verify current access and resolve source concerns before using this lead."
-                : willingness === "yes"
-                  ? "Willingness has a recorded date and source. Reconfirm it for this specific introduction; it does not establish present consent or decision authority."
-                  : "This is a recorded company connection. Introduction willingness, suitability, and decision authority need confirmation.",
+          nodeCount: personIds.length + 2,
+          membership,
+          chain,
+          personIds,
+          edgeSources,
         });
       }
       if (personIds.length >= 2) return;
@@ -228,10 +210,85 @@ export function findRelationshipPaths(input: PathInput): PathResults {
     }
     visit(rootId, [rootId], []);
   }
-  all.sort(comparePaths);
+  function materialize(candidate: Candidate): NetworkPath {
+    const {
+      membership,
+      chain,
+      personIds,
+      edgeSources,
+      current,
+      willingness,
+      weakestPersonalStrength,
+      personalEdgeCount,
+      supportedConnectionCount,
+      reviewedConnectionCount,
+    } = candidate;
+    const edges: NetworkPath["edges"] = [
+      {
+        id: membership.id,
+        label: membership.role,
+        state: membership.state,
+        recordedBy: membership.recordedBy,
+        startDate: membership.startDate,
+        endDate: membership.endDate,
+        evidenceIds: [],
+        strength: null,
+        willingness: "unknown",
+      },
+      ...chain.map((e, i) => ({
+        id: e.id,
+        label: e.kind.replaceAll("_", " ") + (e.title ? ` · ${e.title}` : ""),
+        state: e.state,
+        recordedBy: e.recordedBy,
+        startDate: e.startDate,
+        endDate: e.endDate,
+        evidenceIds: [e.evidenceId],
+        strength: e.strength,
+        willingness: e.willingness as "yes" | "no" | "unknown",
+        willingnessDate: e.willingnessDate,
+        willingnessSource: e.willingnessSource,
+        evidenceReviewState: edgeSources[i]?.reviewState ?? "missing",
+      })),
+    ];
+    return {
+      id: [membership.id, ...chain.map((e) => e.id)].join(":"),
+      current,
+      nodes: [
+        {
+          id: input.organization.id,
+          kind: "organization",
+          label: input.organization.name,
+        },
+        ...personIds.map((id) => ({
+          id,
+          kind: "person" as const,
+          label: people.get(id)!.name,
+        })),
+        {
+          id: input.company.id,
+          kind: "company",
+          label: input.company.name,
+        },
+      ],
+      edges,
+      willingness,
+      weakestPersonalStrength,
+      personalEdgeCount,
+      supportedConnectionCount,
+      reviewedConnectionCount,
+      warning:
+        willingness === "no"
+          ? "Respect the recorded refusal. This connection is unavailable for an introduction; choose another permitted route."
+          : !current
+            ? "Historical, unknown, future, or unsupported connection. Verify current access and resolve source concerns before using this lead."
+            : willingness === "yes"
+              ? "Willingness has a recorded date and source. Reconfirm it for this specific introduction; it does not establish present consent or decision authority."
+              : "This is a recorded company connection. Introduction willingness, suitability, and decision authority need confirmation.",
+    };
+  }
   return {
-    current: all.filter((p) => p.current).slice(0, 3),
-    historical: all.filter((p) => !p.current).slice(0, 3),
+    current: best.current.map(materialize),
+    historical: best.historical.map(materialize),
   };
 }
 /** Backward-compatible entry point. Now includes bounded explicit personal intermediaries. */
