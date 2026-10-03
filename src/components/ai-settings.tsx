@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 type Settings = {
   enabled: boolean;
   model: string;
@@ -10,17 +10,23 @@ export function AiSettings() {
   const [config, setConfig] = useState<Settings | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const edited = useRef(false);
   useEffect(() => {
-    fetch("/api/ai/settings")
+    const controller = new AbortController();
+    fetch("/api/ai/settings", { signal: controller.signal })
       .then(async (r) => {
         const value = await r.json();
         if (!r.ok)
           throw new Error(
             value.error?.message ?? "Could not load AI settings.",
           );
-        setConfig(value);
+        if (!controller.signal.aborted && !edited.current) setConfig(value);
       })
-      .catch((e) => setMessage(e.message));
+      .catch((e) => {
+        if (!controller.signal.aborted && !edited.current)
+          setMessage(e.message);
+      });
+    return () => controller.abort();
   }, []);
   return (
     <section className="card">
@@ -40,6 +46,7 @@ export function AiSettings() {
         <form
           onSubmit={async (e) => {
             e.preventDefault();
+            edited.current = true;
             setBusy(true);
             setMessage("");
             try {
@@ -76,16 +83,20 @@ export function AiSettings() {
             value={config.model}
             maxLength={120}
             disabled={!config.canConfigure || busy}
-            onChange={(e) => setConfig({ ...config, model: e.target.value })}
+            onChange={(e) => {
+              edited.current = true;
+              setConfig({ ...config, model: e.target.value });
+            }}
           />
           <label>
             <input
               type="checkbox"
               checked={config.enabled}
               disabled={!config.canConfigure || busy}
-              onChange={(e) =>
-                setConfig({ ...config, enabled: e.target.checked })
-              }
+              onChange={(e) => {
+                edited.current = true;
+                setConfig({ ...config, enabled: e.target.checked });
+              }}
             />{" "}
             Enable OpenAI assistance
           </label>

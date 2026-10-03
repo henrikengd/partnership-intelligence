@@ -19,7 +19,10 @@
     "auth:recover": "tsx scripts/recover-admin.ts",
     "predev": "tsx scripts/recover-generation-runs.ts",
     "prestart": "tsx scripts/recover-generation-runs.ts",
-    "runs:recover": "tsx scripts/recover-generation-runs.ts"
+    "runs:recover": "tsx scripts/recover-generation-runs.ts",
+    "demo:seed": "tsx scripts/demo.ts seed",
+    "demo:reset": "tsx scripts/demo.ts reset",
+    "test:provision-demo": "tsx scripts/provision-demo-test.ts"
   },
   "dependencies": {
     "@xyflow/react": "12.10.1",

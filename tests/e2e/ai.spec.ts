@@ -317,3 +317,63 @@ test("reuses an accepted action key after lost transport and rotates it for a fr
   expect(keys).toHaveLength(3);
   expect(keys[2]).not.toBe(keys[0]);
 });
+
+test("late initial settings load cannot replace an edited and saved model", async ({
+  page,
+}) => {
+  // Delay the first StrictMode mount's response even if transport cancellation is ignored.
+  await page.addInitScript(() => {
+    const original = window.fetch.bind(window);
+    let first = true;
+    const state = window as unknown as {
+      releaseInitialSettings?: () => void;
+      initialSettingsReleased?: boolean;
+    };
+    window.fetch = async (input, init) => {
+      if (
+        String(input) === "/api/ai/settings" &&
+        (!init?.method || init.method === "GET") &&
+        first
+      ) {
+        first = false;
+        const response = await original(input, { ...init, signal: undefined });
+        await new Promise<void>((resolve) => {
+          state.releaseInitialSettings = () => {
+            state.initialSettingsReleased = true;
+            resolve();
+          };
+        });
+        return response;
+      }
+      return original(input, init);
+    };
+  });
+  await login(page, true);
+  await page.goto(settingsUrl());
+  const s = settings(page);
+  await expect(s.getByLabel("Provider model", { exact: true })).toBeVisible();
+  await s
+    .getByLabel("Provider model", { exact: true })
+    .fill("saved-after-delayed-initial-load");
+  await s
+    .getByRole("button", { name: "Save AI settings", exact: true })
+    .click();
+  await expect(s.getByRole("status")).toHaveText("AI settings saved.");
+  await page.waitForFunction(
+    () =>
+      typeof (window as unknown as { releaseInitialSettings?: unknown })
+        .releaseInitialSettings === "function",
+  );
+  await page.evaluate(() =>
+    (
+      window as unknown as { releaseInitialSettings: () => void }
+    ).releaseInitialSettings(),
+  );
+  await expect(s.getByLabel("Provider model", { exact: true })).toHaveValue(
+    "saved-after-delayed-initial-load",
+  );
+  await page.reload();
+  await expect(s.getByLabel("Provider model", { exact: true })).toHaveValue(
+    "saved-after-delayed-initial-load",
+  );
+});

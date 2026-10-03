@@ -60,6 +60,7 @@ test("previews supported and explicit candidates, reviews a concrete cold approa
     .getByRole("link", { name: "Open opportunity", exact: true })
     .first()
     .click();
+  await page.getByText("Review readiness and target", { exact: true }).click();
   const start = page.getByRole("button", {
     name: "Start pursuing",
     exact: true,
@@ -124,8 +125,12 @@ test("previews supported and explicit candidates, reviews a concrete cold approa
       { exact: true },
     ),
   ).toBeVisible();
+  await page.getByText("Review readiness and target", { exact: true }).click();
   await start.click();
   await expect(page.getByText(/Need: CNC machining · pursuing/)).toBeVisible();
+  await page
+    .getByText("Read immutable assessment versions", { exact: true })
+    .click();
   const version = page.locator("summary").filter({ hasText: "Version 1 ·" });
   await version.focus();
   await page.keyboard.press("Enter");
@@ -277,12 +282,20 @@ test("reload shows the chosen alternative route and named terminal contact, then
       exact: true,
     }),
   ).toBeVisible();
+  await plan
+    .getByText("Inspect reviewed route, evidence and willingness", {
+      exact: true,
+    })
+    .click();
   await expect(
     plan.locator("ol.text-path strong").filter({ hasText: targetName }),
   ).toBeVisible();
   await expect(plan.getByText(/This saved plan matches/)).toBeVisible();
-  await plan.locator("summary").first().focus();
-  await page.keyboard.press("Enter");
+  await plan
+    .locator("summary")
+    .filter({ hasText: "View connection evidence" })
+    .last()
+    .press("Enter");
   await expect(plan.getByText(/I (currently )?work/)).toBeVisible();
   await plan.screenshot({ path: "/private/tmp/pi-t05-reviewed-route.png" });
   await editOpportunity(f.headers, id, {

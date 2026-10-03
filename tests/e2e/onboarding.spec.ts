@@ -168,6 +168,9 @@ test("resumes onboarding, skips optional personal network, maps CSV and generate
   await expect(
     page.getByRole("heading", { name: "Language Example", exact: true }),
   ).toBeVisible();
+  await page
+    .getByText("Edit partnership brief and owner", { exact: true })
+    .click();
   await expect(
     page.getByLabel("Recommended first action", { exact: true }),
   ).toHaveValue(

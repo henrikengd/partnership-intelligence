@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { WorkspaceData } from "@/modules/records/service";
 import type { RecordKind } from "@/modules/records/validation";
@@ -33,6 +33,11 @@ export function RecordEditor({
   const router = useRouter();
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error) errorRef.current?.focus();
+  }, [error]);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const categorySuggestions = [
@@ -404,6 +409,7 @@ export function RecordEditor({
   function begin(record: Record<string, unknown>) {
     setSaved(false);
     setError("");
+    setFieldErrors({});
     if (kind === "people") {
       const affiliation = data.affiliations.filter(
         (a) => a.personId === record.id,
@@ -421,6 +427,7 @@ export function RecordEditor({
     event.preventDefault();
     const form = event.currentTarget;
     setError("");
+    setFieldErrors({});
     setSaved(false);
     setBusy(true);
     const values: Record<string, unknown> = Object.fromEntries(
@@ -467,7 +474,14 @@ export function RecordEditor({
         body: JSON.stringify(values),
       });
       const result = await response.json();
-      if (!response.ok)
+      if (!response.ok) {
+        setFieldErrors(
+          Object.fromEntries(
+            (result.error?.fields ?? []).map(
+              (f: { field: string; message: string }) => [f.field, f.message],
+            ),
+          ),
+        );
         throw new Error(
           result.error?.fields
             ?.map((f: { message: string }) => f.message)
@@ -475,6 +489,7 @@ export function RecordEditor({
             result.error?.message ??
             "The record could not be saved.",
         );
+      }
       setEditing(null);
       form.reset();
       setSaved(true);
@@ -497,7 +512,7 @@ export function RecordEditor({
       </div>
       <form key={String(editing?.id ?? "new")} onSubmit={submit}>
         {error && (
-          <p role="alert" className="error">
+          <p role="alert" className="error" ref={errorRef} tabIndex={-1}>
             {error}
           </p>
         )}
@@ -508,11 +523,20 @@ export function RecordEditor({
         )}
         {fields[kind].map((field) => (
           <div key={field.name}>
-            <label htmlFor={`${kind}-${field.name}`}>{field.label}</label>
+            {field.type === "multiselect" ? (
+              <p id={`${kind}-${field.name}-label`}>{field.label}</p>
+            ) : (
+              <label htmlFor={`${kind}-${field.name}`}>{field.label}</label>
+            )}
             {field.type === "textarea" ? (
               <textarea
                 id={`${kind}-${field.name}`}
                 name={field.name}
+                aria-invalid={Boolean(fieldErrors[field.name])}
+                aria-describedby={
+                  `${field.help ? `${kind}-${field.name}-help` : ""} ${fieldErrors[field.name] ? `${kind}-${field.name}-error` : ""}`.trim() ||
+                  undefined
+                }
                 required={field.required}
                 defaultValue={String(
                   editing?.[field.name] ?? field.defaultValue ?? "",
@@ -520,7 +544,11 @@ export function RecordEditor({
                 maxLength={4000}
               />
             ) : field.type === "multiselect" ? (
-              <div className="checkboxes">
+              <div
+                className="checkboxes"
+                role="group"
+                aria-labelledby={`${kind}-${field.name}-label`}
+              >
                 {field.options?.map((o) => (
                   <label key={o.value}>
                     <input
@@ -540,6 +568,11 @@ export function RecordEditor({
               <select
                 id={`${kind}-${field.name}`}
                 name={field.name}
+                aria-invalid={Boolean(fieldErrors[field.name])}
+                aria-describedby={
+                  `${field.help ? `${kind}-${field.name}-help` : ""} ${fieldErrors[field.name] ? `${kind}-${field.name}-error` : ""}`.trim() ||
+                  undefined
+                }
                 required={field.required}
                 defaultValue={String(
                   editing?.[field.name] ??
@@ -559,7 +592,14 @@ export function RecordEditor({
                 id={`${kind}-${field.name}`}
                 name={field.name}
                 list={
-                  field.name === "category" ? "category-suggestions" : undefined
+                  field.name === "category"
+                    ? `${kind}-category-suggestions`
+                    : undefined
+                }
+                aria-invalid={Boolean(fieldErrors[field.name])}
+                aria-describedby={
+                  `${field.help ? `${kind}-${field.name}-help` : ""} ${fieldErrors[field.name] ? `${kind}-${field.name}-error` : ""}`.trim() ||
+                  undefined
                 }
                 type={field.type ?? "text"}
                 step={field.type === "number" ? "0.01" : undefined}
@@ -571,10 +611,19 @@ export function RecordEditor({
                 maxLength={2000}
               />
             )}
-            {field.help && <span className="muted small">{field.help}</span>}
+            {field.help && (
+              <span id={`${kind}-${field.name}-help`} className="muted small">
+                {field.help}
+              </span>
+            )}
+            {fieldErrors[field.name] && (
+              <p id={`${kind}-${field.name}-error`} className="error small">
+                {fieldErrors[field.name]}
+              </p>
+            )}
           </div>
         ))}
-        <datalist id="category-suggestions">
+        <datalist id={`${kind}-category-suggestions`}>
           {categorySuggestions.map((c) => (
             <option key={c} value={c} />
           ))}

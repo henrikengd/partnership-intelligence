@@ -849,3 +849,23 @@ export const auditEvent = pgTable(
     ),
   ],
 );
+
+// This sentinel is created only by the guarded isolated-demo CLI.
+export const demoInstallation = pgTable(
+  "demo_installation",
+  {
+    id: integer("id").primaryKey().default(1),
+    datasetVersion: text("dataset_version").notNull(),
+    organizationId: uuid("organization_id").references(() => organization.id, {
+      onDelete: "set null",
+    }),
+    state: text("state").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    check("demo_singleton", sql`${t.id}=1`),
+    check("demo_state", sql`${t.state} IN ('seeding','ready')`),
+  ],
+);

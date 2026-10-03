@@ -56,20 +56,29 @@ export function ReviewedActionPlan({
             Introduction through the selected recorded route. Reconfirm
             willingness for this particular request.
           </p>
-          {selected ? (
-            <RelationshipPaths
-              paths={{
-                current: selected.current ? [selected] : [],
-                historical: selected.current ? [] : [selected],
-              }}
-              data={data}
-            />
-          ) : (
-            <p className="notice">
-              Selected route is no longer available in current records. Its
-              recorded ID was {review.pathId}; verify again before approaching.
+          {selected && (
+            <p aria-label="Reviewed introduction route">
+              {selected.nodes.map((n) => n.label).join(" → ")}
             </p>
           )}
+          <details>
+            <summary>Inspect reviewed route, evidence and willingness</summary>
+            {selected ? (
+              <RelationshipPaths
+                paths={{
+                  current: selected.current ? [selected] : [],
+                  historical: selected.current ? [] : [selected],
+                }}
+                data={data}
+              />
+            ) : (
+              <p className="notice">
+                Selected route is no longer available in current records. Its
+                recorded ID was {review.pathId}; verify again before
+                approaching.
+              </p>
+            )}
+          </details>
         </>
       )}
     </section>

@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireActor } from "@/server/auth/access";
 import { DomainError } from "@/server/errors";
+import { WorkspaceNavigation } from "@/components/workspace-navigation";
+import { getDemoStatus } from "@/modules/demo/service";
 import { Logout } from "@/components/logout";
 export const dynamic = "force-dynamic";
 export default async function WorkspaceLayout({
@@ -17,6 +19,7 @@ export default async function WorkspaceLayout({
     if (e instanceof DomainError && e.status === 401) redirect("/login");
     throw e;
   }
+  const demo = await getDemoStatus();
   return (
     <div className="shell">
       <a className="skip" href="#main">
@@ -26,21 +29,16 @@ export default async function WorkspaceLayout({
         <Link className="brand" href="/dashboard">
           Partnership Intelligence
         </Link>
-        <nav aria-label="Main navigation">
-          <Link href="/dashboard">Overview</Link>
-          <Link href="/needs">Needs</Link>
-          <Link href="/network">Network</Link>
-          <Link href="/companies">Companies</Link>
-          <Link href="/graph">Graph</Link>
-          <Link href="/opportunities">Opportunities</Link>
-          <Link href="/pipeline">Pipeline</Link>
-          <Link href="/partnerships">Partnerships</Link>
-          <Link href="/onboarding">Onboarding</Link>
-          <Link href="/settings">Settings</Link>
-        </nav>
+        <WorkspaceNavigation />
         <span className="muted small">{actor.name}</span>
         <Logout />
       </header>
+      {demo && (
+        <p className="demo-banner" role="note">
+          Fictional demo · Riverbend Community Workshop. All people, companies,
+          sources and outcomes are invented. Do not enter private information.
+        </p>
+      )}
       <main id="main" className="content">
         {children}
       </main>

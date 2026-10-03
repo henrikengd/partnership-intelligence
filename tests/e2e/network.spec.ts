@@ -106,7 +106,9 @@ test("focuses graph by company/opportunity, exposes source details by keyboard a
     .getByRole("button", { name: "Apply company filter", exact: true })
     .click();
   await expect(
-    page.getByText(/No permitted current internal route is recorded/),
+    page
+      .getByText(/No permitted current internal route is recorded/)
+      .filter({ visible: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Current route 1", exact: true }),

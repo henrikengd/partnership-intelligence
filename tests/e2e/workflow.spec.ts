@@ -124,6 +124,9 @@ test("invited editor enters a machining opportunity and records a completed intr
   await expect(
     page.getByText("Supplied claim, unreviewed", { exact: true }),
   ).toBeVisible();
+  await page
+    .getByText("Inspect assessment route snapshot", { exact: true })
+    .click();
   await expect(
     page.getByText(/Introduction willingness: unknown/),
   ).toBeVisible();
@@ -132,6 +135,9 @@ test("invited editor enters a machining opportunity and records a completed intr
   ).toBeVisible();
   await expect(page.getByText(/AI is disabled/)).toBeVisible();
   const id = page.url().split("/").pop()!;
+  await page
+    .getByText("Edit partnership brief and owner", { exact: true })
+    .click();
   await page
     .getByLabel("Team owner")
     .selectOption({ label: "Fictional coordinator" });

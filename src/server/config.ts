@@ -1,5 +1,7 @@
 import { z } from "zod";
 const schema = z.object({
+  APPLICATION_MODE: z.enum(["live", "demo"]).default("live"),
+  DEMO_DATABASE_URL: z.string().url().optional(),
   DATABASE_URL: z.string().url(),
   BETTER_AUTH_SECRET: z.string().min(32),
   BOOTSTRAP_SECRET: z.string().min(32),

@@ -409,3 +409,80 @@ h2,
 h3 {
   overflow-wrap: anywhere;
 }
+
+/* Checkbox/radio controls retain their intrinsic size beside readable labels. */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  flex: 0 0 auto;
+  accent-color: var(--accent);
+  vertical-align: middle;
+  margin: 0 8px 0 0;
+}
+label:has(> input[type="checkbox"]),
+label:has(> input[type="radio"]) {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 400;
+}
+label:has(> input[type="checkbox"]) input,
+label:has(> input[type="radio"]) input {
+  margin-top: 0.3em;
+}
+.header nav a {
+  padding: 4px 0;
+}
+.header nav a[aria-current="page"] {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration-thickness: 3px;
+}
+.demo-banner {
+  border: 1px solid #9fbcac;
+  background: #edf5ef;
+  padding: 12px 16px;
+  margin: 20px 0 0;
+  border-radius: 8px;
+}
+.disclosure-card > summary {
+  font-size: 18px;
+  color: var(--ink);
+  padding: 4px 0;
+}
+.disclosure-card[open] > summary {
+  margin-bottom: 20px;
+}
+.action-summary dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.action-summary dt {
+  font-weight: 600;
+}
+.action-summary dd {
+  margin: 0 0 10px;
+}
+@media (max-width: 700px) {
+  .header nav {
+    gap: 10px 16px;
+  }
+  .card {
+    padding: 18px;
+  }
+  .stack {
+    gap: 16px;
+  }
+  .detail-grid {
+    gap: 16px;
+  }
+}
+
+.disclosure-card > .card {
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
