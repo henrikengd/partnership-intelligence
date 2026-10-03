@@ -14,7 +14,11 @@ The original planning workspace remains untouched and its local main is unborn. 
 
 ## Current assignment and blockers
 
-Current checked application: 01c969f1de9e3ee6821d471820754956fe990fc5. T-06 and T-07 are integrated, independently checked and closed. T-08 and T-09 are running in their assigned isolated worktrees. Earlier checkpoints are historical where superseded. Earlier checkpoints below retain their measured evidence and are historical where superseded.
+Current checked application: `7f6dbb460ca52b35f3ff2de7755a58cba045af0e`. T-02 through T-08 are integrated, verified and closed. T-09 is finishing demo/accessibility verification in its assigned worktree. T-10 remains blocked until T-09 integration is verified. T-01 remains open only for actual remote CI. No PR exists yet.
+
+## Historical implementation checkpoints
+
+The following assignments and measurements describe their recorded commits; later checkpoints supersede them.
 
 T-01 / #2 has been integrated as `2f9e821` from worker commit `f1a6e21a1b5d124b2e4fbd79e3c5137cb1260766`. The coordinator independently passed `npm ci`, lint, typecheck, production build, four unit tests, nine PostgreSQL integration tests, migrations and the complete Chromium access workflow on this commit. Worker evidence additionally establishes actual Compose build/bootstrap/restart persistence and operator recovery, documented in notes/t-01-verification.md. GitHub CI remains pending the final feature PR, so #2 remains open for that acceptance criterion. Its integrated functional prerequisites are verified and T-02 is eligible; tracker comments must distinguish this from full closure.
 
@@ -36,7 +40,7 @@ T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.
 
 ## Next action
 
-Integrate completed T-08 privacy services and actual settings composition, then T-09 demo/polish after verifying its adopted0008 metadata is not replayed. Verify both tickets and release T-10 operating/restore work. Only root updates the integration branch and tracker. T-08/T-09 remain blocked until both tickets are integrated and verified. Preserve #2 pending final CI and the parent as open until PR merge.
+Integrate T-09 demo/polish without replaying its adopted 0008 metadata, verify the combined application, then release T-10 operating/restore work. Only root updates the integration branch and tracker. Preserve #2 pending actual final CI and parent #1 as open until PR merge.
 
 ## Infrastructure and tracker reconciliation
 
@@ -130,3 +134,10 @@ The original T-06 and T-07 worker attachments now confirm archived_worktree, wit
 Read-only reviewer `/root/test_runtime` inspected the changing T-08 sources atop `ad19d6dda6fac46f97d2a5022bedfe2b39d38c15` and confirms the earlier event, capability/incentive and short-name selection repairs. The reviewer also checked scrubbed-record mappings, current locked organization fields, administrator rechecks, privacy revisions, late AI completion and readable assessment-less detail/pipeline pages. No additional material code finding was reported. The event regression needs an isolated company/opportunity because the combined fixture could mask removal of the event scan; the implementation worker is adding that case. This is bounded source review, not final feature review.
 
 T-08 worker checks report lint/types, 33 unit and 85 PostgreSQL tests passing, including queued-edit/import/AI rejection and a delayed provider response after deletion. A stronger completed-history fixture and the requested development logging suppression are receiving final checks. T-09 worker checks report lint/types, 31 unit, 80 PostgreSQL and 15 Chromium tests passing, with final graph/disclosure edits receiving affected browser checks and a production build. These are worker results, not integrated closure evidence. Both tickets remain open, and T-10 remains blocked until their integration is verified.
+
+
+## T-08 integrated checkpoint
+
+Worker `6056f4c5bbd8ff3d40c6bd5f3fcb5d75ee17916a` integrated as `cd180a3`; root `7f6dbb460ca52b35f3ff2de7755a58cba045af0e` mounts administrator privacy controls on actual Settings. Coordinator lint, types, production build, 33 unit and all 85 PostgreSQL tests pass. The actual Settings/detail/pipeline privacy browser test passes, covering preview/cancel/confirm, preserved agreement history and same-opportunity regeneration. Fictional desktop/390px Settings and outcome screenshots were inspected. The isolated event-only regression passes and an intentionally removed event scan makes it fail; the source was restored before commit.
+
+Read-only reviewer `/root/test_runtime` confirms exact integrated composition and earlier selection/concurrency repairs at `7f6dbb4`, with no material finding in this bounded inspection. #9 closes with integrated criterion evidence. Final complete-feature review, fresh Compose/restore verification and remote CI remain pending. T-09's final browser run identified an initial AI Settings response race; its worker is making a bounded UI repair and regression without changing the AI service contract.
