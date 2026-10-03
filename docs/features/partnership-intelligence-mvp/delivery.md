@@ -14,7 +14,7 @@ The original planning workspace remains untouched and its local main is unborn. 
 
 ## Current assignment and blockers
 
-Current checked application: 36470bc29870246e5ab271e1dcd879fe400902b6. T-06 is integrated, independently checked and closed. T-07 is awaiting integration and repairs to its final AI validation. T-08 and T-09 remain blocked. Earlier checkpoints below retain their measured evidence and are historical where superseded.
+Current checked application: 01c969f1de9e3ee6821d471820754956fe990fc5. T-06 and T-07 are integrated, independently checked and closed. T-08 and T-09 are now eligible; isolated assignments follow. Earlier checkpoints are historical where superseded. Earlier checkpoints below retain their measured evidence and are historical where superseded.
 
 T-01 / #2 has been integrated as `2f9e821` from worker commit `f1a6e21a1b5d124b2e4fbd79e3c5137cb1260766`. The coordinator independently passed `npm ci`, lint, typecheck, production build, four unit tests, nine PostgreSQL integration tests, migrations and the complete Chromium access workflow on this commit. Worker evidence additionally establishes actual Compose build/bootstrap/restart persistence and operator recovery, documented in notes/t-01-verification.md. GitHub CI remains pending the final feature PR, so #2 remains open for that acceptance criterion. Its integrated functional prerequisites are verified and T-02 is eligible; tracker comments must distinguish this from full closure.
 
@@ -36,7 +36,7 @@ T-07 / #8 is assigned to /root/architecture_research in /Users/henrik.noteless/.
 
 ## Next action
 
-Integrate T-07 implementation and validation repair, mount actual detail/settings/startup controls, then verify before releasing T-08/T-09. Only root updates the integration branch and tracker. T-08/T-09 remain blocked until both tickets are integrated and verified. Preserve #2 pending final CI and the parent as open until PR merge.
+Assign T-08 privacy controls and T-09 demo/polish in isolated worktrees from 01c969f. Coordinate migration0008 release before T-09 metadata changes. Only root updates the integration branch and tracker. T-08/T-09 remain blocked until both tickets are integrated and verified. Preserve #2 pending final CI and the parent as open until PR merge.
 
 ## Infrastructure and tracker reconciliation
 
@@ -91,3 +91,10 @@ T-07 worker b9841d51668e472194694e8c20ba9eabd324c81c is committed but not integr
 
 
 T-07 base implementation integrated as46ee7b7 without replaying its adopted schema. Root has mounted actual AI detail/settings controls and dynamic configuration status, optional Compose credential, and startup recovery, pending final validation repair and full integrated checks. Migration0007 and startup recovery apply successfully to isolated pi_integration. Read-only T-08 preparation is assigned to /root/foundation; implementation remains blocked pending T-07 verification.
+
+
+## T-07 integrated checkpoint
+
+Worker b9841d51668e472194694e8c20ba9eabd324c81c integrated as46ee7b7. Focused repair717c24c2ad264992dd476b9a020c6b6a82696e4f integrated asbbcfcfd74b5f25bdaaa6cdd732180c13ab884d48. Root01c969f1de9e3ee6821d471820754956fe990fc5 mounts actual AI context/draft and settings controls, dynamic configuration status, optional Compose credential and startup recovery for both run types. Final lint/types/build/unit31/PG76 pass. Full Chromium14 passed on actual pages before the nonvisual validator repair; new validator cases pass in unit/PG tests. Fictional390px AI context/settings rendered screenshots inspected. No live provider calls or real credentials were used. Bounded read-only reviewer /root/test_runtime confirms all earlier material repairs atbbcfcfd and actual composition at01c969f, with no remaining material finding in that bounded review. #8 is closed and #9/#10 are eligible. Final complete-feature review and remote CI remain pending.
+
+Read-only T-08 preparation identifies all historical snapshot/import/AI dependencies and organization-lock/privacy-revision concurrency seams. Planned audit metadata contains identifiers/counts only. Privacy confirmation binds active administrator and current impact; delayed imports/AI must not resurrect removed material. Purged opportunities require a useful regeneration/history view. This plan remains withinF-02/F-15, pending implementation and verification.
