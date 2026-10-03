@@ -19,3 +19,7 @@ An invitation proves possession of its private link and requires the bound email
 AI is off by default. Every live request requires an editable preview; the user can add private material to that packet deliberately. Pseudonyms reduce disclosure but do not guarantee anonymity. Strict output schemas and reference checks do not establish semantic truth. Humans review source support, contact relevance and outreach before acting. Read [AI disclosure](docs/ai-assistance.md).
 
 Deletion removes matching dependent current material conservatively. Unknown aliases or unlinked narrative may need manual review. Deletion cannot erase separately retained copies. Follow [retention](docs/private-data-retention.md) and [restore](docs/backup-restore.md) procedures before reopening an older backup to users.
+
+## Dependency advisory snapshot
+
+On 2026-10-03, `npm audit --omit=dev` reported zero production advisories. The complete audit reported five high-severity dependency entries for one [braces stack-exhaustion advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), through the development-only Next.js ESLint glob tooling. The advisory lists no patched version and npm's latest braces is 3.0.3. The application does not pass imported records, user text or URLs to this development glob parser. Keep lint inputs to the trusted checkout. Do not apply npm's proposed forced downgrade of Next.js ESLint configuration without checking compatibility. Recheck the advisory and upgrade when a supported fix exists.

@@ -14,7 +14,11 @@ The original planning workspace remains untouched and its local main is unborn. 
 
 ## Current assignment and blockers
 
-Current checked application: `8c1bc0dc6e4f0574cf5057b4936e391f5f961ed4`. T-02 through T-09 are integrated, verified and closed, including the repaired AI Settings race. T-10 is now eligible for operating/restore acceptance. T-01 remains open only for actual remote CI. No PR exists yet.
+Last complete local check: application `8c1bc0dc6e4f0574cf5057b4936e391f5f961ed4`, unit33/PG89/Chromium17 plus lint/types/build. Independent preflight at this application and docs74175fa confirmed five P2 defects. T-03/#4, T-04/#5, T-05/#6 and T-07/#8 are reopened. T-02, T-06, T-08 and T-09 remain closed. T-10 continues unaffected fresh runtime/restore work, with a final container smoke required after repairs. T-01 remains open for actual remote CI. No PR exists yet.
+
+Graph worker owns bounded ranked traversal, exact active regeneration past closed history, and incentive-aware onboarding in managed pi-review-paths/codex/pi-review-paths from74175fa, database5544/app3104. Coordinator owns AI actionable-prose validation and stale brief/factor remounting in managed pi-review-ai/codex/pi-review-ai from74175fa, database5541/app3103. No schema changes are planned. Non-implementing reviewer test_runtime reproduced all five findings, released its temporary database5540/app3100 reservations, and will inspect the repairs. T-10 foundation owns pi-t10-runtime and separate fresh Compose projects pi-release3110/pi-release-restore3111/pi-release-demo3115. Only root integrates and updates tracker.
+
+Preflight evidence: graph fixture allocated160,000 snapshots from800 relationships; active refresh incorrectly required creation acknowledgement; onboarding ignored stored companyNeedIncentives; no-route AI drafts accepted two invented named-contact actions; actual Chromium readiness refresh retained stale ask/fit and an owner-only save overwrote the reviewed ask. Reproductions are saved in /private/tmp/pi-review-preflight-evidence.md and associated scripts. Two suspected date findings were withdrawn because input schemas prohibit their scenarios and are not outstanding findings. This preflight is not final exact-SHA acceptance.
 
 ## Historical implementation checkpoints
 
@@ -158,3 +162,8 @@ Coordinator independently reset the dedicated restricted `pi_demo` companion thr
 T-10/#11 is assigned to `/root/foundation` in `/Users/henrik.noteless/.codex/worktrees/pi-t10-runtime/partnership-intelligence`, branch `codex/pi-t10-runtime`, from verified checkpoint `7ec3fe74ef51b4fc1ec294ba97e677608229cedd`. It owns guarded test-only release fixtures/checks and actual fresh local-clone Compose/restart/operator-recovery/full-record backup/restore/demo evidence. Dedicated projects are `pi-release` on 3110, `pi-release-restore` on 3111 and `pi-release-demo` on 3115 under the existing isolated Docker context. It must not touch root PostgreSQL 5540 or shared operating docs/config/CI. Root owns those files and will provide their committed runbook/config before the final runtime workflow. No public DNS/TLS deployment or live provider call is authorized or claimed.
 
 The clean T-08 and T-09 worker checkouts were queued for managed archival after integration; committed evidence and fictional screenshots remain preserved. Root and runtime worktrees are retained. All final runtime, full-feature review and remote CI evidence is still pending.
+
+
+## Release dependency reconciliation
+
+Current live npm audit changed on the unchanged lockfile after GHSA-vfj7-8cjw-p6xm was reviewed on October2. It reports five high development dependency entries representing one braces<=3.0.3 recursion advisory via Next.js ESLint glob tooling. Official advisory says no patched version; current npm registry latest is3.0.3. Production-only audit reports zero advisories. No untrusted application/import/AI data enters this tooling path. Preserve supported pinned versions instead of the proposed forced eslint-config-next downgrade; SECURITY.md records the bounded tooling exposure. Earlier zero-all-dependency audit snapshots do not describe current state.
