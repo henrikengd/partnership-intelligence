@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, screenshotPath } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { editorContext } from "../helpers/workflow";
 test.beforeEach(async () => {
@@ -73,12 +73,12 @@ test("resumes onboarding, skips optional personal network, maps CSV and generate
   await page.getByLabel("Resolution for row 3").selectOption("exclude");
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.screenshot({
-    path: "/private/tmp/pi-t03-import-desktop.png",
+    path: screenshotPath("pi-t03-import-desktop.png"),
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
-    path: "/private/tmp/pi-t03-import-mobile.png",
+    path: screenshotPath("pi-t03-import-mobile.png"),
     fullPage: true,
   });
   expect(
@@ -153,12 +153,12 @@ test("resumes onboarding, skips optional personal network, maps CSV and generate
     .click();
   await expect(page.getByText(/No people recorded/)).toBeVisible();
   await page.screenshot({
-    path: "/private/tmp/pi-t03-onboarding-mobile.png",
+    path: screenshotPath("pi-t03-onboarding-mobile.png"),
     fullPage: true,
   });
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.screenshot({
-    path: "/private/tmp/pi-t03-onboarding-desktop.png",
+    path: screenshotPath("pi-t03-onboarding-desktop.png"),
     fullPage: true,
   });
   await page

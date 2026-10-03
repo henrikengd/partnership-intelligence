@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, screenshotPath } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { savedWorkflow } from "../helpers/workflow";
 import { generateOpportunity } from "../../src/modules/opportunities/service";
@@ -106,7 +106,7 @@ test("reviews minimized editable context with AI disabled and no key at 390px", 
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
-  await p.screenshot({ path: "/private/tmp/pi-t07-context-390.png" });
+  await p.screenshot({ path: screenshotPath("pi-t07-context-390.png") });
 });
 test("shows a fake refused run, requires a fresh retry preview and displays a locally resolved fake draft", async ({
   page,
@@ -221,7 +221,7 @@ test("shows a fake refused run, requires a fresh retry preview and displays a lo
       p.getByRole("heading", { name: "AI request: completed", exact: true }),
     ).toBeVisible();
     await p.screenshot({
-      path: "/private/tmp/pi-t07-result-390.png",
+      path: screenshotPath("pi-t07-result-390.png"),
       style: "nextjs-portal { visibility: hidden; }",
     });
   } finally {
@@ -272,7 +272,7 @@ test("admin persists model settings while editors cannot configure credentials",
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
-  await s.screenshot({ path: "/private/tmp/pi-t07-settings-390.png" });
+  await s.screenshot({ path: screenshotPath("pi-t07-settings-390.png") });
 });
 
 test("reuses an accepted action key after lost transport and rotates it for a fresh edited preview", async ({

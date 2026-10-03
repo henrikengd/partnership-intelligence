@@ -11,3 +11,8 @@ export const test = base.extend<object, { databaseCleanup: void }>({
   ],
 });
 export { expect };
+
+// Keep fictional browser captures in Playwright's ignored, per-test output.
+export function screenshotPath(name: string): string {
+  return test.info().outputPath(name);
+}

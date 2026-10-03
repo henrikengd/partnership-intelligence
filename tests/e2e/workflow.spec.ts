@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, screenshotPath } from "./fixtures";
 import { generateOpportunity } from "../../src/modules/opportunities/service";
 import { resetTestDatabase } from "../helpers/database";
 import { editorContext, savedWorkflow } from "../helpers/workflow";
@@ -188,12 +188,12 @@ test("invited editor enters a machining opportunity and records a completed intr
   ).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1100 });
   await page.screenshot({
-    path: "/private/tmp/pi-t02-opportunity-desktop.png",
+    path: screenshotPath("pi-t02-opportunity-desktop.png"),
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
-    path: "/private/tmp/pi-t02-opportunity-mobile.png",
+    path: screenshotPath("pi-t02-opportunity-mobile.png"),
     fullPage: true,
   });
   expect(

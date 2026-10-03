@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, screenshotPath } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { savedWorkflow } from "../helpers/workflow";
 import { generateOpportunity } from "../../src/modules/opportunities/service";
@@ -52,12 +52,12 @@ test("reviews deletion, cancels safely, preserves outcome detail and regenerates
     page.getByRole("heading", { name: "Deletion preview: Anna Example" }),
   ).toBeVisible();
   await page.screenshot({
-    path: "/tmp/pi-t08-privacy-desktop.png",
+    path: screenshotPath("pi-t08-privacy-desktop.png"),
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
-    path: "/tmp/pi-t08-privacy-mobile.png",
+    path: screenshotPath("pi-t08-privacy-mobile.png"),
     fullPage: true,
   });
   expect(
@@ -82,7 +82,7 @@ test("reviews deletion, cancels safely, preserves outcome detail and regenerates
   await expect(page.locator("body")).toContainText("2020-03-04");
   await expect(page.locator("body")).not.toContainText("Anna Example");
   await page.screenshot({
-    path: "/tmp/pi-t08-outcome-mobile.png",
+    path: screenshotPath("pi-t08-outcome-mobile.png"),
     fullPage: true,
   });
   expect(

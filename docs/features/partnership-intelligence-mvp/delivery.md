@@ -10,7 +10,7 @@
 - Initial integration commit: bf4953531a6e927a75b348fb075a0a4fd10fc22f.
 - PR: https://github.com/henrikengd/partnership-intelligence/pull/12. Open as draft while current-commit CI is pending. No merge or deployment is authorized.
 
-The original planning workspace remains untouched and its local main is unborn. Managed worktrees use the fetched remote base. Deliver explicitly authorizes its prescribed implementation branches, ordinary feature push, ticket updates and PR; the preparation-stage notes about future authorization are historical.
+The original planning files and empty index remain untouched. Its main ref now resolves to the shared approved base, so Git shows the planning files as untracked and the base files as staged deletions; no cleanup or checkout was performed there. Managed worktrees use the fetched remote base. Deliver explicitly authorizes its prescribed implementation branches, ordinary feature push, ticket updates and PR; the preparation-stage notes about future authorization are historical.
 
 ## Current assignment and blockers
 
@@ -20,7 +20,7 @@ Fresh complete correctness, Standards and Spec reviews have no remaining materia
 
 T-10 final operating proof is integrated as77722a7 from worker5c78812. Actual fresh Compose setup/restart/account recovery, guarded no-key demo reset, artificial interruption with explicit fake-provider retry, logging suppression and full31-table/55-row backup/restore equality passed. The final9a549e9 image was rebuilt and all159 running source files matched in each private/restored/demo app. Actual final browser flows passed, domain digests stayed unchanged and all six release containers are stopped, with private volumes/evidence retained. Source/helpers/runbooks were inspected by the non-implementing reviewer; paid provider/public TLS/deployment are not claimed.
 
-Only root updates integration/tracker/PR. Original planning workspace remains untouched. T-01 through T-09 and both repair worktrees are archived or queued for managed archival, with code/evidence integrated and needed fictional logs/screenshots outside Git. The clean runtime worker can archive after this final evidence integration. Integration remains attached for user review.
+Only root updates integration/tracker/PR. Original planning workspace remains untouched. All ten implementation worktrees and both repair worktrees are confirmed archived with recoverable snapshots. Code/evidence is integrated and needed fictional logs/screenshots remain outside Git. Integration remains attached for user review.
 
 ## Historical implementation checkpoints
 
@@ -179,3 +179,11 @@ Source9a549e9 integrates worker path/refresh/readiness repairs asfcd8908/4f621c4
 ## PR publication and CI bootstrap
 
 PR #12 is the single feature PR, attached to this Codex chat. Its initial head was `2d312a3465c8c53e762fd7f6c8bf6202be7f3017`; it remains unmerged against the unchanged approved main base. GitHub Actions is enabled, but live workflow and run inventories were empty after PR creation despite the workflow file being present on the feature branch. The workflow now also runs on `codex/**` pushes so the first unmerged workflow can run on a feature push. This changes no application or runtime-helper source. Actual remote results remain pending; an enabled trigger is not successful CI evidence.
+
+
+## First remote CI result and portability repair
+
+The first push and PR runs at `f0a43c7bc7b1973e690b651dca2428f72ef2e309` registered and ran. Install, lint, types, 38 unit tests, migrations, demo test provisioning and 94 PostgreSQL tests passed. The 20-test browser suite reported 13 failures, all `ENOENT` when saving fictional screenshots under macOS-only `/private/tmp`; the build step was skipped. The failing PR run is https://github.com/henrikengd/partnership-intelligence/actions/runs/37088830896. Browser screenshot destinations now use Playwright's per-test output directory, already ignored by Git. Assertions and application/helper source are unchanged. No failed check is being waived.
+
+
+The portable-output repair passes coordinator lint/type checking and all 20 actual Chromium workflows locally. Log: `/private/tmp/pi-ci-portable-local-e2e.log`. Reviewer `/root/test_runtime` inspected the helper and every changed E2E spec, found no material issue and confirmed that assertions are unchanged and no screenshot is uploaded. The final application's full browser coverage now also binds the unchanged `9a549e9` source with this repaired test harness. Remote checks still must pass on the repair commit.

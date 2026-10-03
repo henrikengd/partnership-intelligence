@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, screenshotPath } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { savedNetwork } from "../helpers/network";
 import { saveRecord } from "../../src/modules/records/service";
@@ -75,12 +75,12 @@ test("focuses graph by company/opportunity, exposes source details by keyboard a
   ).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({
-    path: "/private/tmp/pi-t04-graph-desktop.png",
+    path: screenshotPath("pi-t04-graph-desktop.png"),
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
-    path: "/private/tmp/pi-t04-graph-mobile.png",
+    path: screenshotPath("pi-t04-graph-mobile.png"),
     fullPage: true,
   });
   expect(

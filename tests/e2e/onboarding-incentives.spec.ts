@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, screenshotPath } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { editorContext } from "../helpers/workflow";
 import { saveRecord } from "../../src/modules/records/service";
@@ -62,7 +62,7 @@ test("cash incentive onboarding offers and generates a brief with no capability 
     }),
   ).toBeVisible();
   await page.screenshot({
-    path: "/private/tmp/pi-review-cash-onboarding-390.png",
+    path: screenshotPath("pi-review-cash-onboarding-390.png"),
     fullPage: true,
   });
 });

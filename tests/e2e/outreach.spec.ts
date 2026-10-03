@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, screenshotPath } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { savedWorkflow } from "../helpers/workflow";
 import { generateOpportunity } from "../../src/modules/opportunities/service";
@@ -122,12 +122,12 @@ test("assigns ownership, records action, resolves and reschedules follow-up, arc
     .click();
   await expect(page.getByText("Current state:")).toContainText("agreed");
   await page.screenshot({
-    path: "/private/tmp/pi-t06-actions-desktop.png",
+    path: screenshotPath("pi-t06-actions-desktop.png"),
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
-    path: "/private/tmp/pi-t06-actions-mobile.png",
+    path: screenshotPath("pi-t06-actions-mobile.png"),
     fullPage: true,
   });
   expect(
@@ -159,12 +159,12 @@ test("assigns ownership, records action, resolves and reschedules follow-up, arc
     page.getByRole("heading", { name: "agreed", exact: true }),
   ).toBeVisible();
   await page.screenshot({
-    path: "/private/tmp/pi-t06-pipeline-mobile.png",
+    path: screenshotPath("pi-t06-pipeline-mobile.png"),
     fullPage: true,
   });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({
-    path: "/private/tmp/pi-t06-pipeline-desktop.png",
+    path: screenshotPath("pi-t06-pipeline-desktop.png"),
     fullPage: true,
   });
 });

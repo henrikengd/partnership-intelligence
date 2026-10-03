@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, screenshotPath } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { savedWorkflow } from "../helpers/workflow";
 import { saveRecord } from "../../src/modules/records/service";
@@ -141,12 +141,12 @@ test("previews supported and explicit candidates, reviews a concrete cold approa
   ).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({
-    path: "/private/tmp/pi-t05-opportunity-desktop.png",
+    path: screenshotPath("pi-t05-opportunity-desktop.png"),
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
-    path: "/private/tmp/pi-t05-opportunity-mobile.png",
+    path: screenshotPath("pi-t05-opportunity-mobile.png"),
     fullPage: true,
   });
   expect(
@@ -205,7 +205,7 @@ test("shows interrupted work and explicitly retries the same run while preservin
   ).toHaveCount(1);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({
-    path: "/private/tmp/pi-t05-candidates-desktop.png",
+    path: screenshotPath("pi-t05-candidates-desktop.png"),
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -308,7 +308,7 @@ test("reload shows the chosen alternative route and named terminal contact, then
     .last()
     .press("Enter");
   await expect(plan.getByText(/I (currently )?work/)).toBeVisible();
-  await plan.screenshot({ path: "/private/tmp/pi-t05-reviewed-route.png" });
+  await plan.screenshot({ path: screenshotPath("pi-t05-reviewed-route.png") });
   await editOpportunity(f.headers, id, {
     ownerId: null,
     ask: "Machine twenty revised fixtures from updated drawings.",
@@ -382,7 +382,7 @@ test("exact regeneration refreshes the existing linked proposal after a decline 
     page.getByRole("link", { name: "a previous closed outcome", exact: true }),
   ).toHaveAttribute("href", `/opportunities/${first.results[0].opportunityId}`);
   await page.screenshot({
-    path: "/private/tmp/pi-review-linked-refresh.png",
+    path: screenshotPath("pi-review-linked-refresh.png"),
     fullPage: true,
   });
 });

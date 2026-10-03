@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, screenshotPath } from "./fixtures";
 import { resetTestDatabase } from "../helpers/database";
 import { editorContext } from "../helpers/workflow";
 import { buildRiverbend } from "../../src/modules/demo/dataset";
@@ -63,7 +63,7 @@ test("fictional main workflow exposes core actions, keyboard disclosures, useful
   ).not.toBe("none");
   await page.keyboard.press("Enter");
   await page.screenshot({
-    path: "/private/tmp/pi-t09-opportunity-390.png",
+    path: screenshotPath("pi-t09-opportunity-390.png"),
     fullPage: true,
   });
   await page.goto("/graph");
@@ -81,7 +81,7 @@ test("fictional main workflow exposes core actions, keyboard disclosures, useful
     page.getByRole("heading", { name: "Recorded connections", exact: true }),
   ).toBeVisible();
   await page.screenshot({
-    path: "/private/tmp/pi-t09-graph-390.png",
+    path: screenshotPath("pi-t09-graph-390.png"),
     fullPage: true,
   });
   await page.goto(`/opportunities/${demo.opportunities[3]}`);
@@ -157,7 +157,7 @@ test("fictional main workflow exposes core actions, keyboard disclosures, useful
     "true",
   );
   await page.screenshot({
-    path: "/private/tmp/pi-t09-network-errors-390.png",
+    path: screenshotPath("pi-t09-network-errors-390.png"),
     fullPage: true,
   });
 });

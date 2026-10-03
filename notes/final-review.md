@@ -19,3 +19,11 @@ Reviewer `/root/test_runtime` found no remaining material issue at the reviewed 
 The initial five findings were dense path allocations, exact refresh blocked by closed history, incentive-only onboarding readiness, invented named-contact prose and stale editor overwrites. Later findings were silent new occurrence-date defaults and unknown names in raw default source/need narrative or professional titles. Two suspected current-date scenarios were withdrawn because the public validation schemas prohibit them; they are not residual findings.
 
 Standards: zero unresolved documented violations, two nonblocking duplication judgments. Spec: zero actionable findings. Complete correctness: zero remaining material findings. Runtime/CI/current PR readiness must still be verified against their actual commits; agent review does not supply an author's independent GitHub approval.
+
+
+## CI trigger repair
+
+Reviewer `/root/test_runtime` independently inspected the bounded patch later committed as `f0a43c7bc7b1973e690b651dca2428f72ef2e309`. Adding `codex/**` push checks preserves pull-request checks, read-only permissions, fictional CI configuration and every existing job. The reviewer found no material issue. Application/helper source is unchanged from the complete reviewed commit above. Actual remote CI remains a separate observable gate.
+
+
+Reviewer `/root/test_runtime` independently inspected the subsequent E2E portability repair. All fixed screenshot filenames use `test.info().outputPath()` inside active tests. The installed Playwright runtime creates the destination. No absolute temporary screenshot path remains in the E2E suite; assertions, fixtures and application behavior are unchanged. The reviewer found no material issue. Local lint/types and all 20 Chromium workflows pass. Remote CI is checked separately after publishing the repair.
