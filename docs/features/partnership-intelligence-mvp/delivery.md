@@ -107,3 +107,10 @@ Both workers start from verified application01c969f1de9e3ee6821d471820754956fe99
 T-09/#10 is assigned to /root/graph in /Users/henrik.noteless/.codex/worktrees/pi-t09-demo/partnership-intelligence, branchcodex/pi-t09-demo, isolatedpi_t01 database5544/app3104. It owns fictionalRiverbend seed/resetguards/docs, accessibility/sharedCSS/navigation/usefulloading-error-empty states and bounded detail density polish. It waits for committed0008 schema metadata before any subsequent demo sentinel migration0009. Workers coordinate detail changes directly; root integrates serially and verifies. Neither worker updates delivery/tracker/PR.
 
 T-06 and T-07 clean worker checkouts have been queued for managed archival after integration; screenshots and source evidence remain in the feature or /private/tmp. No needed ignored files were present. T-01 remains open solely for final remoteCIcriterion, T-10 is blocked pendingT08/T09, and parent#1 remainsopen until PRmerge.
+
+
+## T-08 schema handoff and early review
+
+Worker schema ad19d6dda6fac46f97d2a5022bedfe2b39d38c15 was inspected and integrated as b44bb211ebf2a522c253bdd1c84253db2cfde4d5. Coordinator applied migration0008 to isolated pi_integration and passed typecheck. T-09 is released to adopt this exact metadata before generating its owned0009 demo sentinel. Schema handoff does not close T-08.
+
+Bounded early read-only privacy review is assigned to /root/test_runtime against emerging services in the T-08 worker checkout. It targets historical dependencies, signed impact, private-data races and coherent outcomes; unfinished UI is not a completed acceptance claim. Root is preparing final operating/restore verification from current code and primary Caddy/PostgreSQL documentation; T-10 implementation remains blocked pending integrated T-08/T-09 behavior.
