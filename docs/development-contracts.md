@@ -45,7 +45,7 @@ Traversal admits bounded current routes with no more than two people, ranks up t
 
 Graphs have relational text equivalents and native keyboard-accessible disclosures. A graph canvas mounts after its container is visible and measured. Current record comparisons remain distinct from immutable assessment route snapshots.
 
-`scoring.ts` defines rubric v1 with values 0–4 or unknown and weights relationship25, fit25, access10, incentive10, feasibility10, previous5, evidence10 and urgency5. Priority is the sum of `weight * value / 4` for known values. Coverage is the sum of their weights; unknowns earn no points and are not renormalized. A human value requires rationale and evidence or an explicit organization assessment. It is never a success probability.
+`scoring.ts` defines rubric v1 with values 0–4 or unknown and weights of 25 for relationship and fit, 10 for access, incentive, feasibility and evidence, and 5 for previous relationship and urgency. Priority is the sum of `weight * value / 4` for known values. Coverage is the sum of their weights; unknowns earn no points and are not renormalized. A human value requires rationale and evidence or an explicit organization assessment. It is never a success probability.
 
 ## Proposals, review and generation runs
 
