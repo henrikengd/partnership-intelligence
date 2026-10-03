@@ -1,3 +1,5 @@
+import { PrivacySettings } from "@/components/privacy-settings";
+import { getPrivacySettings } from "@/modules/privacy/service";
 import { AiSettings } from "@/components/ai-settings";
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -62,6 +64,9 @@ export default async function Settings() {
             </p>
           </section>
         )}
+        {actor.role === "admin" && organization ? (
+          <PrivacySettings initial={await getPrivacySettings(requestHeaders)} />
+        ) : null}
         <AiSettings />
         <section className="card">
           <h2>Your password</h2>
